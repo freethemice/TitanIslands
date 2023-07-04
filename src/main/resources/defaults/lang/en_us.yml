@@ -1,0 +1,6 @@
+error:
+  understand: "I don't understand the command."
+  default_file: "Failed to get the default file: "
+  console: "Only players can use this command."
+  number: " isn't a number"
+  inside: "Can't place here, its to close to another island."

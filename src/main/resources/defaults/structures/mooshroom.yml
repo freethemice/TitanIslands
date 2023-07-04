@@ -1,0 +1,5 @@
+name: mooshroom # the name player will see
+sealevel: 3 # blocks from the lowest point to the surface/sea level.
+version: 1.0.0 # Don't change this, is for auto updating
+enabeld: true # whether a no admin can use this
+autoupdate: true # if a newer version of this structure is released update it to the newer version

@@ -1,0 +1,19 @@
+name: ${project.artifactId}
+version: '${project.version}'
+main: ${project.groupId}.${project.artifactId}
+api-version: ${minecraft.api-version}
+authors: [ freethemice ]
+description: ${project.description}
+website: ${project.url}
+depend:
+  - TitanBoxLibs
+commands:
+  tis:
+    description: telepads
+    usage: /<command>
+  island:
+    description: telepad
+    usage: /<command>
+  is:
+    description: tep
+    usage: /<command>
