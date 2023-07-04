@@ -31,17 +31,13 @@ public class CubeSelectorTool {
         int z3 = cube2.getFirstCornerZ();
         int x4 = cube2.getSecondCornerX();
         int z4 = cube2.getSecondCornerZ();
-        cube1.getFirstCorner().getBlock().setType(Material.DIAMOND_BLOCK);
-        cube1.getSecondCorner().getBlock().setType(Material.GOLD_BLOCK);
-        cube2.getFirstCorner().getBlock().setType(Material.COAL_BLOCK);
-        cube2.getSecondCorner().getBlock().setType(Material.NETHERITE_BLOCK);
         // Check if the cubes intersect on the x-axis
         boolean xOverlap = (x1 > x3 && x1 < x4) || (x2 > x3 && x2 < x4) ||
-                (x3 > x1 && x3 < x2) || (x4 > x1 && x4 < x2);
+                (x3 > x1 && x3 < x2) || (x4 > x1 && x4 < x2) || (x1 == x3 && x2 == x4);
 
         // Check if the cubes intersect on the z-axis
         boolean zOverlap = (z1 > z3 && z1 < z4) || (z2 > z3 && z2 < z4) ||
-                (z3 > z1 && z3 < z2) || (z4 > z1 && z4 < z2);
+                (z3 > z1 && z3 < z2) || (z4 > z1 && z4 < z2) || (z1 == z3 && z2 == z4);
 
         // Return true if there is overlap on both the x and z axes
         return xOverlap && zOverlap;
@@ -49,6 +45,7 @@ public class CubeSelectorTool {
     public static boolean inAnyCubes(CubeSelectorTool cube1)
     {
         List<CubeSelectorTool> cubes = new ArrayList<>(CubeSelectorTool.cubes.values());
+        System.out.println(cubes.size());
         return cubes.stream().anyMatch(cube -> isInCube(cube1, cube));
     }
     public static boolean inAnyCubes(Location location)
@@ -105,8 +102,8 @@ public class CubeSelectorTool {
     }
     public Location getCenterOffset() {
         Location center = getCenter();
-        Location subtract = center.subtract(getFirstCorner());
-        return subtract;
+        Location subtract = center.clone().subtract(getFirstCorner());
+        return subtract.clone();
     }
 
     public World getWorld() {

@@ -129,10 +129,9 @@ public class TitanIslands extends JavaPlugin {
                 if (label.equalsIgnoreCase("tis") || label.equalsIgnoreCase("island") || label.equalsIgnoreCase("is")) {
                     if (args.length > 0) {
                         StructureManager structure = StructureManager.getStructure(args[0]);
-                        Location location = ((Player) sender).getLocation();
+                        Location location = ((Player) sender).getLocation().clone();
                         CubeSelectorTool preBuild = structure.getPreBuild(location);
                         boolean anyCubes = CubeSelectorTool.inAnyCubes(preBuild);
-                        System.out.println("Final:" + anyCubes);
                         if (anyCubes)
                         {
                             if (sender instanceof Player)
@@ -145,7 +144,9 @@ public class TitanIslands extends JavaPlugin {
                             }
                             return true;
                         }
-
+                        //make sure nothing got mess-up when we checked it
+                        structure = StructureManager.getStructure(args[0]);
+                        location = ((Player) sender).getLocation().clone();
                         CubeSelectorTool build = structure.build(location);
                         build.place();
 

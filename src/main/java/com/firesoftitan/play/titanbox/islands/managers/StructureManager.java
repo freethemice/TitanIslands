@@ -33,13 +33,12 @@ public class StructureManager {
     private static Location getAdjustedPlacement(Location location, String name)
     {
         StructureManager structure1 = StructureManager.getStructure(name);
-        File nbtFile = structure1.nbtFile;
-        Structure structure = load(nbtFile);
+        Structure structure = load(structure1.nbtFile);
         BlockVector size = structure.getSize();
         Location location1 = new Location(location.getWorld(), location.getBlockX() + size.getBlockX(), location.getBlockY() + size.getBlockY(), location.getBlockZ() + size.getBlockZ());
         CubeSelectorTool selectorTool = new CubeSelectorTool(location, location1);
         Location center = selectorTool.getCenterOffset();
-        Location subtract = location.subtract(center);
+        Location subtract = location.clone().subtract(center);
         int highest = location.getWorld().getHighestBlockYAt(subtract);
         subtract.setY(highest - structure1.getSeaLevelOffset() );
 
