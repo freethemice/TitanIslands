@@ -1,5 +1,0 @@
-name: island 1 #the name player will see
-sealevel: 1 #blocks from the highest corner to the sea level.
-version: 1.0.0 #Don't change this, is for auto updating
-enabeld: true #whether a no admin can use this
-autoupdate: true #if a newer version of this structure is released update it to the newer version

@@ -1,2 +1,22 @@
 settings:
-  language: en_us #this is the language file used in the lang directory
+  language: en_us # this is the language file used in the lang directory
+  environment:
+    distance:
+      min: 50 #minimum distance that an island will spawn from the player.
+      max: 300 #maximum distance that an island will spawn from the player.
+      closest: 300 #This would find the minimum distance to an existing island, pick a random new location, and spawn a new island there.
+                   #note: closest has to be equal to or greater that max.
+    time: 1800 #how often an island will spawn in seconds
+    announce: true #Announce the creation of the island and location to all players.
+    count:
+      min: 1 #minimum number of islands that will spawn together
+      max: 3 #maximum number of islands that will spawn together
+  starting: #Setting for player first joining the server
+    islands: #Island player will start off with
+      - starter
+      - oak
+      - oak
+      - stone
+      - stone
+      - sand
+    random: 1 #number of random island(S) that a player will get in addition to the starting islands.
