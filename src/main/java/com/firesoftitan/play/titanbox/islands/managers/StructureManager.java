@@ -17,6 +17,10 @@ import java.util.*;
 
 public class StructureManager {
 
+    public static List<String> getAllIsland() {
+        List<String> outList = new ArrayList<String>(allStructures.keySet());
+        return outList;
+    }
     public static StructureManager getRandomIsland() {
         Map<String, Integer> nameToOdds = new HashMap<>();
         for (String key : allStructures.keySet()) {
@@ -197,6 +201,10 @@ public class StructureManager {
         CubeSelectorManager build = StructureManager.build(finalLocation, this.nbtFile, StructureRotation.NONE);
         return build;
     }
+    public int getCost()
+    {
+        return configManager.getInt("cost");
+    }
     public int getSeaLevelOffset()
     {
         return configManager.getInt("sealevel") - 1;
@@ -229,10 +237,6 @@ public class StructureManager {
         String version = configManager.getString("version");
         if (version == null) version = "0";
         return version;
-    }
-    public Boolean isUnlockable()
-    {
-        return configManager.getBoolean("unlockable");
     }
     public Boolean isAutoUpdate()
     {

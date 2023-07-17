@@ -7,6 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,6 +17,7 @@ public class PlayerManager {
     public PlayerManager() {
         instants = this;
     }
+    private HashMap<String, Integer> structureCount = new HashMap<String, Integer>();
     public boolean hasPlayerJoinedBefore(Player player)
     {
         return playerData.contains(player.getUniqueId().toString());
@@ -23,6 +25,26 @@ public class PlayerManager {
     public void add(Player player, CubeSelectorManager cubeSelectorManager)
     {
         playerData.set(player.getUniqueId() + ".cubes." + cubeSelectorManager.getKey()+ ".key", cubeSelectorManager.getName());
+        int count = 0;
+        if (playerData.contains(player.getUniqueId() + ".counts." + cubeSelectorManager.getName()))
+        {
+            count = playerData.getInt(player.getUniqueId() + ".counts." + cubeSelectorManager.getName());
+        }
+        count++;
+        playerData.set(player.getUniqueId() + ".counts." + cubeSelectorManager.getName(), count);
+    }
+    public int getCount(Player player, CubeSelectorManager cubeSelectorManager)
+    {
+        return getCount(player,cubeSelectorManager.getName());
+    }
+    public int getCount(Player player, String name)
+    {
+        int count = 0;
+        if (playerData.contains(player.getUniqueId() + ".counts." + name))
+        {
+            count = playerData.getInt(player.getUniqueId() + ".counts." + name);
+        }
+        return count;
     }
     public void unlock(Player player, String name)
     {
@@ -82,6 +104,7 @@ public class PlayerManager {
     }
     public void save()
     {
+
         playerData.save();
     }
 }

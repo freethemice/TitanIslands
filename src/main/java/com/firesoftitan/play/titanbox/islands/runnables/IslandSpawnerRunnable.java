@@ -1,10 +1,10 @@
 package com.firesoftitan.play.titanbox.islands.runnables;
 
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
+import com.firesoftitan.play.titanbox.islands.managers.CubeSelectorManager;
 import com.firesoftitan.play.titanbox.islands.managers.LangManager;
 import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
 import com.firesoftitan.play.titanbox.islands.managers.StructureManager;
-import com.firesoftitan.play.titanbox.islands.managers.CubeSelectorManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -16,6 +16,12 @@ import java.util.Random;
 
 public class IslandSpawnerRunnable extends BukkitRunnable {
     private static Random random = new Random(System.currentTimeMillis());
+    public static IslandSpawnerRunnable instance;
+    public IslandSpawnerRunnable() {
+        super();
+        instance = this;
+    }
+
     @Override
     public void run() {
         List<Player> playerList = new ArrayList<Player>(Bukkit.getOnlinePlayers());

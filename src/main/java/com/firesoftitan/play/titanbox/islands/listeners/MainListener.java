@@ -1,19 +1,23 @@
 package com.firesoftitan.play.titanbox.islands.listeners;
 
-import com.firesoftitan.play.titanbox.islands.TitanIslands;
 import com.firesoftitan.play.titanbox.islands.enums.MoveThresholdEnum;
-import com.firesoftitan.play.titanbox.islands.managers.ConfigManager;
-import com.firesoftitan.play.titanbox.islands.managers.LangManager;
-import com.firesoftitan.play.titanbox.islands.managers.StructureManager;
-import com.firesoftitan.play.titanbox.islands.managers.CubeSelectorManager;
+import com.firesoftitan.play.titanbox.islands.managers.*;
+import com.firesoftitan.play.titanbox.islands.runnables.CompassRunnable;
 import com.firesoftitan.play.titanbox.islands.runnables.IslandSpawnerRunnable;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Arrow;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.*;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.vehicle.VehicleEnterEvent;
+import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -24,7 +28,7 @@ import java.util.UUID;
 
 import static com.firesoftitan.play.titanbox.islands.TitanIslands.*;
 
-public class MainListener  implements Listener {
+public class MainListener implements Listener {
 
     public MainListener(){
 
@@ -35,11 +39,52 @@ public class MainListener  implements Listener {
     }
     private HashMap<UUID, Location> playerMove = new HashMap<UUID, Location>();
     private HashMap<UUID, Long> playerSpawn = new HashMap<UUID, Long>();
+
+    private Arrow arrow;
+
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+
+        if(event.getAction() == Action.LEFT_CLICK_AIR ||
+                event.getAction() == Action.RIGHT_CLICK_AIR) {
+            Player player = event.getPlayer();
+            if (player.isInsideVehicle()) {
+                CubeSelectorManager closestExcluding = CubeSelectorManager.getClosestExcluding(player.getLocation(), player);
+                if (closestExcluding != null)CompassRunnable.instance.changeLocation(player, closestExcluding.getCenter());
+
+            }
+            // Player pressed a key
+        }
+    }
+    @EventHandler
+    public void onVehicleEnterEvent(VehicleEnterEvent event) {
+
+        if (event.getEntered().getType() == EntityType.PLAYER)
+        {
+            Player player = (Player)event.getEntered();
+            CompassRunnable.instance.add(player, PlayerManager.instants.getHome(player));
+        }
+    }
+    @EventHandler
+    public void onVehicleEnterEvent(VehicleExitEvent event) {
+
+        if (event.getExited().getType() == EntityType.PLAYER)
+        {
+            Player player = (Player)event.getExited();
+            CompassRunnable.instance.remove(player);
+        }
+    }
     @EventHandler
     public void onPlayerMoveEvent(PlayerMoveEvent event) {
         Player player = event.getPlayer();
         Location last = playerMove.get(player.getUniqueId());
         Location location = player.getLocation().clone();
+        World world = location.getWorld();
+// Location you want to point to
+
+
+        //arrow.setRotation(yaw, pitch);
+
         if (last == null) {
             playerMove.put(player.getUniqueId(), location);
             last = location;
@@ -54,10 +99,15 @@ public class MainListener  implements Listener {
                     String name = cube.getName();
                     boolean unlocked = playerManager.isUnlocked(player, name);
                     StructureManager structure = StructureManager.getStructure(name);
-                    Boolean unlockable = structure.isUnlockable();
-                    if (!unlocked && unlockable) {
+                    if (!unlocked) {
                         playerManager.unlock(player, name);
                         messageTool.sendMessagePlayer(player, LangManager.instants.getMessage("unlocked") + structure.getTitle());
+                        int personalLimit = structure.getPersonalLimit();
+                        String txtAmount = personalLimit + "";
+                        if (personalLimit == -1) txtAmount = LangManager.instants.getMessage("unlimited");
+                        if (personalLimit == 0) txtAmount = LangManager.instants.getMessage("none");
+                        txtAmount = txtAmount + LangManager.instants.getMessage("these");
+                        messageTool.sendMessagePlayer(player, LangManager.instants.getMessage("build") + txtAmount);
                     }
                 }else {
                     CubeSelectorManager closest = CubeSelectorManager.getClosest(location);
@@ -117,19 +167,29 @@ public class MainListener  implements Listener {
                 StructureManager randomIsland = StructureManager.getRandomIsland();
                 starting.add(randomIsland.getName());
             }
+            playerManager.unlock(player,"empty");
             for(String iKey: starting)
             {
-                Location check = CubeSelectorManager.adjustLocation(iKey, location);
-                StructureManager structure = StructureManager.getStructure(iKey);
-                CubeSelectorManager build = structure.build(check);
-                if (!CubeSelectorManager.isOverlapping(build)) {
-                    build.place(structure.getName());
-                    playerManager.add(player, build);
-                    //if (structure.isUnlockable()) playerManager.unlock(player, build.getName());
-                    location = build.getCenter();
+
+                try {
+                    Location check = CubeSelectorManager.adjustLocation(iKey, location);
+                    StructureManager structure = StructureManager.getStructure(iKey);
+                    CubeSelectorManager build = structure.build(check);
+                    if (!CubeSelectorManager.isOverlapping(build)) {
+                        build.place(structure.getName());
+                        playerManager.add(player, build);
+                        //if (structure.isUnlockable()) playerManager.unlock(player, build.getName());
+                        location = build.getCenter();
+                    }
+                } catch (Exception e) {
+                    messageTool.sendMessageSystem(LangManager.instants.getMessage("error.loading") + iKey);
+                    messageTool.sendMessageSystem("");
+
+                    e.printStackTrace();
                 }
             }
         }
+
     }
 
 

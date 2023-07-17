@@ -1,9 +1,7 @@
 package com.firesoftitan.play.titanbox.islands.listeners;
 
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
-import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
 import com.firesoftitan.play.titanbox.islands.managers.StructureManager;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -13,12 +11,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 public class TabCompleteListener implements TabCompleter {
-    private static final String[] ADMIN_COMMANDS = { "build"};
+    private static final String[] ADMIN_COMMANDS = { "spawn", "build", "admin"};
     private static final String[] NON_ADMIN_COMMANDS = {"home", "add", "sethome"};
     private List<String> pluginNames = new ArrayList<String>();
     @Nullable

@@ -1,15 +1,11 @@
 package com.firesoftitan.play.titanbox.islands.managers;
 
-import com.firesoftitan.play.titanbox.libs.managers.SaveManager;
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
 import com.firesoftitan.play.titanbox.libs.managers.SettingsManager;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class ConfigManager {
@@ -18,7 +14,8 @@ public class ConfigManager {
     private String language, world;
     private List<String> starting;
     private int randomI,x,z;
-    private boolean world_boarder, announce;
+    private boolean world_boarder, announce, protection_creepers, protection_griefing,protection_creepers_notowned,
+            protection_griefing_notowned,protection_creepers_owned;
     private int distance_min, distance_max, time, count_min, count_max, closest;
 
     public ConfigManager() {
@@ -58,15 +55,22 @@ public class ConfigManager {
         }
         if (!configFile.contains("settings.environment"))
         {
-            configFile.set("settings.environment.distance.min", 50);
-            configFile.set("settings.environment.distance.max", 300);
-            configFile.set("settings.environment.distance.closest", 300);
+            configFile.set("settings.environment.distance.min", 200);
+            configFile.set("settings.environment.distance.max", 500);
+            configFile.set("settings.environment.distance.closest", 500);
             configFile.set("settings.environment.time", 1800);
             configFile.set("settings.environment.count.min", 1);
             configFile.set("settings.environment.count.max", 3);
             configFile.set("settings.environment.announce", true);
         }
-
+        if (!configFile.contains("settings.protection"))
+        {
+            configFile.set("settings.protection.wild.griefing", false);
+            configFile.set("settings.protection.wild.creepers", true);
+            configFile.set("settings.protection.islands.notowned.griefing", true);
+            configFile.set("settings.protection.islands.notowned.creepers", true);
+            configFile.set("settings.protection.islands.owned.creepers", true);
+        }
         this.closest = configFile.getInt("settings.environment.distance.closest");
         this.distance_min = configFile.getInt("settings.environment.distance.min");
         this.distance_max = configFile.getInt("settings.environment.distance.max");
@@ -75,6 +79,12 @@ public class ConfigManager {
             closest = distance_max;
             configFile.set("settings.environment.distance.max", distance_max);
         }
+
+        this.protection_griefing = configFile.getBoolean("settings.protection.wild.griefing");
+        this.protection_creepers = configFile.getBoolean("settings.protection.wild.creepers");
+        this.protection_griefing_notowned = configFile.getBoolean("settings.protection.islands.notowned.griefing");
+        this.protection_creepers_notowned = configFile.getBoolean("settings.protection.islands.notowned.creepers");
+        this.protection_creepers_owned = configFile.getBoolean("settings.protection.islands.owned.creepers");
         this.time = configFile.getInt("settings.environment.time");
         this.announce = configFile.getBoolean("settings.environment.announce");
         this.count_min = configFile.getInt("settings.environment.count.min");
@@ -88,6 +98,26 @@ public class ConfigManager {
         this.language = configFile.getString("settings.language");
         configFile.save();
 
+    }
+
+    public boolean isProtection_creepers_owned() {
+        return protection_creepers_owned;
+    }
+
+    public boolean isProtection_creepers_notowned() {
+        return protection_creepers_notowned;
+    }
+
+    public boolean isProtection_griefing_notowned() {
+        return protection_griefing_notowned;
+    }
+
+    public boolean isProtection_creepers() {
+        return protection_creepers;
+    }
+
+    public boolean isProtection_griefing() {
+        return protection_griefing;
     }
 
     public int getClosest() {

@@ -5,6 +5,7 @@ import com.firesoftitan.play.titanbox.libs.managers.SaveManager;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Player;
 
 import java.util.*;
 
@@ -96,11 +97,32 @@ public class CubeSelectorManager {
         List<CubeSelectorManager> cubes = new ArrayList<>(CubeSelectorManager.cubes.values());
         return cubes.stream().anyMatch(cube -> isInCube(cube1, cube));
     }
+    public static CubeSelectorManager getRandomExcluding(Location location, Player player)
+    {
+        List<CubeSelectorManager> cubes = new ArrayList<>(CubeSelectorManager.cubes.values());
+
+        cubes.removeIf(selector -> PlayerManager.instants.isOwnedByPlayer(player, selector));
+
+        if(cubes.isEmpty()) return null;
+
+        int randomIndex = random.nextInt(cubes.size());
+
+        return cubes.get(randomIndex);
+
+    }
+    public static CubeSelectorManager getClosestExcluding(Location location, Player player)
+    {
+        List<CubeSelectorManager> cubes = new ArrayList<>(CubeSelectorManager.cubes.values());
+        cubes.removeIf(selector -> PlayerManager.instants.isOwnedByPlayer(player, selector));
+        if(cubes.isEmpty()) return null;
+        CubeSelectorManager min = cubes.stream().min(Comparator.comparingDouble(cube -> cube.getCenter().distance(location))).orElse(null);;
+        return min;
+    }
     public static CubeSelectorManager getClosest(Location location)
     {
         List<CubeSelectorManager> cubes = new ArrayList<>(CubeSelectorManager.cubes.values());
-        Optional<CubeSelectorManager> min = cubes.stream().min(Comparator.comparing(cube -> cube.getCenter().distance(location)));
-        return min.get();
+        CubeSelectorManager min = cubes.stream().min(Comparator.comparingDouble(cube -> cube.getCenter().distance(location))).orElse(null);;
+        return min;
     }
     public static CubeSelectorManager getOverlapping(CubeSelectorManager cube1)
     {
@@ -127,12 +149,11 @@ public class CubeSelectorManager {
     public static boolean isInCube(Location location, CubeSelectorManager cube) {
         return location.getWorld().equals(cube.getWorld())
                 && between(location.getBlockX(), cube.getFirstCornerX(), cube.getSecondCornerX())
-                //&& between(location.getBlockY(), cube.getFirstCornerY(), cube.getSecondCornerY())
                 && between(location.getBlockZ(), cube.getFirstCornerZ(), cube.getSecondCornerZ());
     }
 
     private static boolean between(int val, int start, int end) {
-        return val >= start && val <= end;
+        return val >= start && val < end;
     }
     private static SaveManager cubesSaves = new SaveManager(TitanIslands.instance.getName(), "cubes");
     public static void loadAll()

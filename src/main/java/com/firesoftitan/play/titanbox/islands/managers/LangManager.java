@@ -1,7 +1,7 @@
 package com.firesoftitan.play.titanbox.islands.managers;
 
-import com.firesoftitan.play.titanbox.libs.managers.SaveManager;
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
+import com.firesoftitan.play.titanbox.libs.managers.SaveManager;
 import org.bukkit.ChatColor;
 
 public class LangManager {
