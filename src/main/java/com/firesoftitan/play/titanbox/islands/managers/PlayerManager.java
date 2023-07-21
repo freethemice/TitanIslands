@@ -29,7 +29,7 @@ public class PlayerManager {
     }
     public void add(Player player, CubeManager cubeManager)
     {
-        playerData.set(player.getUniqueId() + ".cubes." + cubeManager.getId() + ".key", cubeManager.getName());
+        playerData.set(player.getUniqueId() + ".cubes." + cubeManager.getId() + ".key", cubeManager.getId());
         int count = 0;
         if (playerData.contains(player.getUniqueId() + ".counts." + cubeManager.getName()))
         {
@@ -98,13 +98,12 @@ public class PlayerManager {
     {
         return playerData.contains(player.getUniqueId() + ".cubes." + cubeManager.getId());
     }
-    public Player getOwner(CubeManager cubeManager)
+    public UUID getOwner(CubeManager cubeManager)
     {
         for (String key: playerData.getKeys()) {
             if (playerData.contains(key + ".cubes." + cubeManager.getId()))
             {
-                UUID uuid = UUID.fromString(key);
-                return Bukkit.getPlayer(uuid);
+                return UUID.fromString(key);
             }
         }
         return null;

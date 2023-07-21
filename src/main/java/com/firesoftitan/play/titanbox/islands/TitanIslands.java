@@ -211,10 +211,25 @@ public class TitanIslands extends JavaPlugin {
                         CubeManager build = structure.build(check);
                         if (!CubeManager.isOverlapping(build)) {
                             IslandManager islandManager = IslandManager.getIsland(cubeManager);
-                            build.place(islandManager, structure.getName());
                             playerManager.add((Player) sender, build);
+                            build.place(islandManager, structure.getName());
                             messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("done"));
                         }
+                        return true;
+                    }
+                    if (args[0].equalsIgnoreCase("check")) {
+                        CubeManager cubeManager = CubeManager.getCube(((Player) sender).getLocation());
+
+                        if (cubeManager == null) {
+                            sender.sendMessage("IM: wild");
+                            sender.sendMessage("OWNED: wild");
+                        } else
+                        {
+                            IslandManager islandManager = IslandManager.getIsland(cubeManager);
+                            sender.sendMessage("IM: " + (islandManager != null));
+                            sender.sendMessage("OWNED: " + PlayerManager.instants.isOwnedByPlayer((Player) sender, cubeManager));
+                        }
+
                         return true;
                     }
                 }
@@ -255,6 +270,7 @@ public class TitanIslands extends JavaPlugin {
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             if (sender instanceof Player)
             {
                 messageTool.sendMessagePlayer((Player) sender,LangManager.instants.getMessage("error.understand"));

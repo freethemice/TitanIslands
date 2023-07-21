@@ -219,6 +219,7 @@ public class CubeManager {
         this.createdTime = saveManager.getLong("created_time");
         this.world = firstCorner.getWorld();
         this.islandManager = IslandManager.getIsland(saveManager.getUUID("island.id"));
+        this.islandManager.add(this);
     }
 
     public UUID getId() {

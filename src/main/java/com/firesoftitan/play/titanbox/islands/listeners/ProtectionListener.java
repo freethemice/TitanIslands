@@ -17,6 +17,8 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.plugin.PluginManager;
 
+import java.util.UUID;
+
 import static com.firesoftitan.play.titanbox.islands.TitanIslands.configManager;
 import static com.firesoftitan.play.titanbox.islands.TitanIslands.instance;
 
@@ -132,7 +134,7 @@ public class ProtectionListener  implements Listener {
                 event.setCancelled(true);
                 return;
             }
-            Player owner = PlayerManager.instants.getOwner(cubeA);
+            UUID owner = PlayerManager.instants.getOwner(cubeA);
             if (owner == null && !configManager.isProtection_creepers_notowned()) {
                 event.setCancelled(true);
             } else {
@@ -163,15 +165,15 @@ public class ProtectionListener  implements Listener {
         if (cubeA == null && cubeB != null) return false;
         if (cubeA != null && cubeB == null) return false;
         if (cubeA == null && cubeB == null) return configManager.isProtection_griefing();
-        Player ownerA = PlayerManager.instants.getOwner(cubeA);
-        Player ownerB = PlayerManager.instants.getOwner(cubeB);
+        UUID ownerA = PlayerManager.instants.getOwner(cubeA);
+        UUID ownerB = PlayerManager.instants.getOwner(cubeB);
         return ownerA.equals(ownerB);
     }
     private boolean isProtected(Location location)
     {
         CubeManager cube = CubeManager.getCube(location);
         if (cube == null) return configManager.isProtection_griefing(); //stop player from building in the wild
-        Player owner = PlayerManager.instants.getOwner(cube);
+        UUID owner = PlayerManager.instants.getOwner(cube);
         if (owner == null) return configManager.isProtection_griefing_notowned();
         return true;
     }
@@ -187,8 +189,10 @@ public class ProtectionListener  implements Listener {
     {
         if (TitanIslands.getAdminMode(player)) return true;
         CubeManager cube = CubeManager.getCube(location);
-        if (cube == null) return configManager.isProtection_griefing_notowned(); //stop player from building in the wild
-        return PlayerManager.instants.isOwnedByPlayer(player, cube);
+        if (cube == null) return configManager.isProtection_griefing(); //stop player from building in the wild
+        UUID ownedByPlayer = PlayerManager.instants.getOwner(cube);
+        if (ownedByPlayer == null) return configManager.isProtection_griefing_notowned(); //
+        return player.getUniqueId().equals(ownedByPlayer);
     }
     
 }
