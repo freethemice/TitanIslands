@@ -8,12 +8,21 @@ website: ${project.url}
 depend:
   - TitanBoxLibs
 commands:
+  compass:
+    description: island
+    usage: /<command>
+  com:
+    description: island
+    usage: /<command>
+  cp:
+    description: island
+    usage: /<command>
   tis:
-    description: telepads
+    description: island
     usage: /<command>
   island:
-    description: telepad
+    description: island
     usage: /<command>
   is:
-    description: tep
+    description: island
     usage: /<command>

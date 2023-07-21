@@ -1,7 +1,7 @@
 package com.firesoftitan.play.titanbox.islands.listeners;
 
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
-import com.firesoftitan.play.titanbox.islands.managers.CubeSelectorManager;
+import com.firesoftitan.play.titanbox.islands.managers.CubeManager;
 import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -16,8 +16,6 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.plugin.PluginManager;
-
-import java.util.List;
 
 import static com.firesoftitan.play.titanbox.islands.TitanIslands.configManager;
 import static com.firesoftitan.play.titanbox.islands.TitanIslands.instance;
@@ -50,8 +48,10 @@ public class ProtectionListener  implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)  
     public void onPlayerInteractEvent(PlayerInteractEvent event) {
-        if (event.getClickedBlock() == null) return;
-        if (!canAccess(event.getPlayer(), event.getClickedBlock()))
+        Block clickedBlock = event.getClickedBlock();
+        if (clickedBlock == null) return;
+        if (clickedBlock.getType().toString().toLowerCase().contains("door")) return;
+        if (!canAccess(event.getPlayer(), clickedBlock))
         {
             event.setCancelled(true);
         }
@@ -59,6 +59,7 @@ public class ProtectionListener  implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)  
     public void onBlockIgniteEvent(BlockIgniteEvent event) {
+        if (event.getIgnitingBlock() == null) return;
         if (!canAccess(event.getPlayer(), event.getIgnitingBlock()))
         {
             event.setCancelled(true);
@@ -70,7 +71,6 @@ public class ProtectionListener  implements Listener {
         if (!sameOwner(event.getToBlock(), event.getBlock()))
         {
             event.setCancelled(true);
-            return;
         }
     }
 
@@ -127,7 +127,7 @@ public class ProtectionListener  implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)  
     public void onEntityExplodeEvent(EntityExplodeEvent event) {
         if (event.getEntity().getType() == EntityType.CREEPER || event.getEntity().getType() == EntityType.WITHER_SKULL || event.getEntity().getType() == EntityType.FIREBALL || event.getEntity().getType() == EntityType.LIGHTNING) {
-            CubeSelectorManager cubeA = CubeSelectorManager.getCube(event.getLocation());
+            CubeManager cubeA = CubeManager.getCube(event.getLocation());
             if (cubeA == null && !configManager.isProtection_creepers()) {
                 event.setCancelled(true);
                 return;
@@ -135,7 +135,6 @@ public class ProtectionListener  implements Listener {
             Player owner = PlayerManager.instants.getOwner(cubeA);
             if (owner == null && !configManager.isProtection_creepers_notowned()) {
                 event.setCancelled(true);
-                return;
             } else {
                 if (configManager.isProtection_creepers_owned()) {
                     event.setCancelled(true);
@@ -159,21 +158,21 @@ public class ProtectionListener  implements Listener {
     }
     private boolean sameOwner(Location locationA, Location locationB)
     {
-        CubeSelectorManager cubeA = CubeSelectorManager.getCube(locationA);
-        CubeSelectorManager cubeB = CubeSelectorManager.getCube(locationB);
+        CubeManager cubeA = CubeManager.getCube(locationA);
+        CubeManager cubeB = CubeManager.getCube(locationB);
         if (cubeA == null && cubeB != null) return false;
         if (cubeA != null && cubeB == null) return false;
-        if (cubeA == null && cubeB == null) return !configManager.isProtection_griefing();
+        if (cubeA == null && cubeB == null) return configManager.isProtection_griefing();
         Player ownerA = PlayerManager.instants.getOwner(cubeA);
         Player ownerB = PlayerManager.instants.getOwner(cubeB);
         return ownerA.equals(ownerB);
     }
     private boolean isProtected(Location location)
     {
-        CubeSelectorManager cube = CubeSelectorManager.getCube(location);
-        if (cube == null) return !configManager.isProtection_griefing(); //stop player from building in the wild
+        CubeManager cube = CubeManager.getCube(location);
+        if (cube == null) return configManager.isProtection_griefing(); //stop player from building in the wild
         Player owner = PlayerManager.instants.getOwner(cube);
-        if (owner == null) return !configManager.isProtection_griefing_notowned();
+        if (owner == null) return configManager.isProtection_griefing_notowned();
         return true;
     }
     private boolean isProtected(Block block)
@@ -187,10 +186,9 @@ public class ProtectionListener  implements Listener {
     private boolean canAccess(Player player, Location location)
     {
         if (TitanIslands.getAdminMode(player)) return true;
-        CubeSelectorManager cube = CubeSelectorManager.getCube(location);
-        if (cube == null) return !configManager.isProtection_griefing_notowned(); //stop player from building in the wild
-        boolean ownedByPlayer = PlayerManager.instants.isOwnedByPlayer(player, cube);
-        return ownedByPlayer;
+        CubeManager cube = CubeManager.getCube(location);
+        if (cube == null) return configManager.isProtection_griefing_notowned(); //stop player from building in the wild
+        return PlayerManager.instants.isOwnedByPlayer(player, cube);
     }
     
 }

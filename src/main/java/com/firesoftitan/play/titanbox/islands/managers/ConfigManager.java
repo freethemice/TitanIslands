@@ -10,7 +10,6 @@ import java.util.List;
 
 public class ConfigManager {
     public static ConfigManager instants;
-    private SettingsManager configFile;
     private String language, world;
     private List<String> starting;
     private int randomI,x,z;
@@ -24,7 +23,7 @@ public class ConfigManager {
     }
     public void reload()
     {
-        configFile = new SettingsManager(TitanIslands.instance.getName(), "config");
+        SettingsManager configFile = new SettingsManager(TitanIslands.instance.getName(), "config");
 
 
         if (!configFile.contains("settings.language"))
@@ -169,8 +168,7 @@ public class ConfigManager {
     }
 
     public List<String> getStarting() {
-        List<String> clone = new ArrayList<>(starting);
-        return clone;
+        return new ArrayList<>(starting);
     }
 
     public int getRandomI() {

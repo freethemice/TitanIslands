@@ -9,12 +9,12 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
-public class CubeSelectorManager {
-    private static HashMap<String, CubeSelectorManager> cubes = new HashMap<String, CubeSelectorManager>();
+public class CubeManager {
+    private static final HashMap<UUID, CubeManager> cubes = new HashMap<UUID, CubeManager>();
     private static final int MAX_CHECK_OFFSET = 250;
     private static final int[] X_OFFSETS = {1, -1};
     private static final int[] Z_OFFSETS = {1, -1};
-    private static Random random = new Random(System.currentTimeMillis());
+    private static final Random random = new Random(System.currentTimeMillis());
     /**
      * Checks if the given location overlaps with the structure for the given key.
      * If it overlaps, it finds the first valid non-overlapping location within
@@ -57,19 +57,26 @@ public class CubeSelectorManager {
         if (structure == null) return null;
         for (int i = 0; i < MAX_CHECK_OFFSET; i++) {
             Location newLocation = locationToCheck.clone().add(i*xOffset, 0, i*zOffset);
-            CubeSelectorManager build = structure.getPreBuild(newLocation);
-            if (!CubeSelectorManager.isOverlapping(build)) {
+            CubeManager build = structure.getPreBuild(newLocation);
+            if (!CubeManager.isOverlapping(build)) {
                 return newLocation;
             }
             //useXOffset = !useXOffset;  // Alternate between x and z
         }
         return locationToCheck;
     }
-    public static void placeCube(CubeSelectorManager cubeSelectorManager)
+    public static void placeCube(CubeManager cubeManager)
     {
-        cubes.put(cubeSelectorManager.getKey(), cubeSelectorManager);
+        cubes.put(cubeManager.getId(), cubeManager);
     }
-    public static boolean isInCube(CubeSelectorManager cube1, CubeSelectorManager cube2) {
+    /**
+     * Checks if two cubes represented by CubeSelectorManager objects intersect.
+     *
+     * @param cube1 The first cube to check
+     * @param cube2 The second cube to check
+     * @return True if the cubes intersect, false otherwise
+     */
+    public static boolean isInCube(CubeManager cube1, CubeManager cube2) {
         // Get the coordinates of the two points defining the first cube
         int x1 = cube1.getFirstCornerX();
         int z1 = cube1.getFirstCornerZ();
@@ -92,14 +99,14 @@ public class CubeSelectorManager {
         // Return true if there is overlap on both the x and z axes
         return xOverlap && zOverlap;
     }
-    public static boolean isOverlapping(CubeSelectorManager cube1)
+    public static boolean isOverlapping(CubeManager cube1)
     {
-        List<CubeSelectorManager> cubes = new ArrayList<>(CubeSelectorManager.cubes.values());
+        List<CubeManager> cubes = new ArrayList<>(CubeManager.cubes.values());
         return cubes.stream().anyMatch(cube -> isInCube(cube1, cube));
     }
-    public static CubeSelectorManager getRandomExcluding(Location location, Player player)
+    public static CubeManager getRandomExcluding(Player player)
     {
-        List<CubeSelectorManager> cubes = new ArrayList<>(CubeSelectorManager.cubes.values());
+        List<CubeManager> cubes = new ArrayList<>(CubeManager.cubes.values());
 
         cubes.removeIf(selector -> PlayerManager.instants.isOwnedByPlayer(player, selector));
 
@@ -110,31 +117,44 @@ public class CubeSelectorManager {
         return cubes.get(randomIndex);
 
     }
-    public static CubeSelectorManager getClosestExcluding(Location location, Player player)
+    public static CubeManager getClosestExcluding(Location location, Player player)
     {
-        List<CubeSelectorManager> cubes = new ArrayList<>(CubeSelectorManager.cubes.values());
+        List<CubeManager> cubes = new ArrayList<>(CubeManager.cubes.values());
         cubes.removeIf(selector -> PlayerManager.instants.isOwnedByPlayer(player, selector));
         if(cubes.isEmpty()) return null;
-        CubeSelectorManager min = cubes.stream().min(Comparator.comparingDouble(cube -> cube.getCenter().distance(location))).orElse(null);;
-        return min;
+        return cubes.stream().min(Comparator.comparingDouble(cube -> cube.getCenter().distance(location))).orElse(null);
     }
-    public static CubeSelectorManager getClosest(Location location)
+    public static CubeManager getClosest(Location location)
     {
-        List<CubeSelectorManager> cubes = new ArrayList<>(CubeSelectorManager.cubes.values());
-        CubeSelectorManager min = cubes.stream().min(Comparator.comparingDouble(cube -> cube.getCenter().distance(location))).orElse(null);;
-        return min;
+        List<CubeManager> cubes = new ArrayList<>();
+
+        for (CubeManager cube : CubeManager.cubes.values()) {
+            Location cubeCenter = cube.getCenter();
+            if (location.distance(cubeCenter) <= ConfigManager.instants.getDistance_max()) {
+                cubes.add(cube);
+            }
+        }
+        return cubes.stream().min(Comparator.comparingDouble(cube -> cube.getCenter().distance(location))).orElse(null);
     }
-    public static CubeSelectorManager getOverlapping(CubeSelectorManager cube1)
+    public static CubeManager getNewest(Location location) {
+
+        List<CubeManager> cubes = new ArrayList<>(CubeManager.cubes.values());
+        return cubes.stream()
+                .min(Comparator.comparingLong(cube -> Math.abs(cube.getCreatedTime() - System.currentTimeMillis())))
+                .orElse(null);
+
+    }
+    public static CubeManager getOverlapping(CubeManager cube1)
     {
-        List<CubeSelectorManager> cubes = new ArrayList<>(CubeSelectorManager.cubes.values());
+        List<CubeManager> cubes = new ArrayList<>(CubeManager.cubes.values());
         return cubes.stream()
                 .filter(cube -> isInCube(cube1, cube))
                 .findFirst()
                 .orElse(null);
     }
-    public static CubeSelectorManager getCube(Location location)
+    public static CubeManager getCube(Location location)
     {
-        List<CubeSelectorManager> cubes = new ArrayList<>(CubeSelectorManager.cubes.values());
+        List<CubeManager> cubes = new ArrayList<>(CubeManager.cubes.values());
         return cubes.stream()
                 .filter(cube -> isInCube(location, cube))
                 .findFirst()
@@ -142,11 +162,12 @@ public class CubeSelectorManager {
     }
     public static boolean isOverlapping(Location location)
     {
-        List<CubeSelectorManager> cubes = new ArrayList<>(CubeSelectorManager.cubes.values());
+        List<CubeManager> cubes = new ArrayList<>(CubeManager.cubes.values());
         return cubes.stream().anyMatch(cube -> isInCube(location, cube));
     }
 
-    public static boolean isInCube(Location location, CubeSelectorManager cube) {
+    public static boolean isInCube(Location location, CubeManager cube) {
+        if (location == null || location.getWorld() == null || cube == null || cube.getWorld() == null) return false;
         return location.getWorld().equals(cube.getWorld())
                 && between(location.getBlockX(), cube.getFirstCornerX(), cube.getSecondCornerX())
                 && between(location.getBlockZ(), cube.getFirstCornerZ(), cube.getSecondCornerZ());
@@ -155,54 +176,78 @@ public class CubeSelectorManager {
     private static boolean between(int val, int start, int end) {
         return val >= start && val < end;
     }
-    private static SaveManager cubesSaves = new SaveManager(TitanIslands.instance.getName(), "cubes");
+    private static final SaveManager cubesSaves = new SaveManager(TitanIslands.instance.getName(), "cubes");
     public static void loadAll()
     {
         for(String key: cubesSaves.getKeys())
         {
             SaveManager saveManager = cubesSaves.getSaveManager(key);
-            CubeSelectorManager selectorTool = new CubeSelectorManager(saveManager);
+            CubeManager selectorTool = new CubeManager(saveManager);
             selectorTool.place();
         }
     }
     public static void saveAll()
     {
-        for (CubeSelectorManager cubeSelectorManager : cubes.values())
+        for (CubeManager cubeManager : cubes.values())
         {
-            cubeSelectorManager.save();
+            SaveManager save = cubeManager.save();
+            cubesSaves.set(cubeManager.getId().toString(), save);
         }
         cubesSaves.save();
     }
-    private Location firstCorner;
-    private Location secondCorner;
+    private final Location firstCorner;
+    private final Location secondCorner;
     private String name;
-    private World world;
+    private final UUID id;
+    private final World world;
+    private final long createdTime;
 
-    public CubeSelectorManager(Location firstCorner, Location secondCorner) {
+    private IslandManager islandManager;
+    public CubeManager(Location firstCorner, Location secondCorner) {
         this.world = firstCorner.getWorld();
         this.firstCorner = firstCorner.clone();
         this.secondCorner = secondCorner.clone();
+        this.createdTime = System.currentTimeMillis();
+        this.id = this.generateID();
     }
-    public CubeSelectorManager(SaveManager saveManager)
+    public CubeManager(SaveManager saveManager)
     {
         this.firstCorner = saveManager.getLocation("first_corner");
         this.secondCorner = saveManager.getLocation("second_corner");
         this.name = saveManager.getString("name");
+        this.id = saveManager.getUUID("id");
+        this.createdTime = saveManager.getLong("created_time");
         this.world = firstCorner.getWorld();
+        this.islandManager = IslandManager.getIsland(saveManager.getUUID("island.id"));
     }
-    public void save()
+
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID generateID()
+    {
+        UUID idtmp = UUID.randomUUID();
+        while (cubes.containsKey(idtmp))
+        {
+            idtmp = UUID.randomUUID();
+        }
+        return idtmp;
+    }
+    public long getCreatedTime() {
+        return createdTime;
+    }
+
+    public SaveManager save()
     {
         SaveManager saveManager = new SaveManager();
         saveManager.set("first_corner", this.firstCorner.clone());
         saveManager.set("second_corner", this.secondCorner.clone());
+        saveManager.set("created_time", this.createdTime);
+        saveManager.set("id", this.id);
         saveManager.set("name", this.name);
-        cubesSaves.set(this.getKey(), saveManager);
-    }
-    public String getKey()
-    {
-        String keyID = TitanIslands.tools.getSerializeTool().serializeLocation(this.firstCorner) +
-                "~" + TitanIslands.tools.getSerializeTool().serializeLocation(this.secondCorner);
-        return keyID;
+        if (this.islandManager != null) saveManager.set("island.id", this.islandManager.getId());
+        return saveManager;
     }
 
     public String getName() {
@@ -210,12 +255,14 @@ public class CubeSelectorManager {
     }
     private void place()
     {
-        CubeSelectorManager.placeCube(this);
+        CubeManager.placeCube(this);
     }
-    public void place(String name)
+    public void place(IslandManager islandManager, String name)
     {
+        this.islandManager = islandManager;
         this.name = name;
-        CubeSelectorManager.placeCube(this);
+        CubeManager.placeCube(this);
+        this.islandManager.add(this);
     }
     public Location getFirstCorner() {
         return firstCorner.clone();
@@ -295,4 +342,7 @@ public class CubeSelectorManager {
     }
 
 
+    public IslandManager getIsland() {
+        return IslandManager.getIsland(this);
+    }
 }

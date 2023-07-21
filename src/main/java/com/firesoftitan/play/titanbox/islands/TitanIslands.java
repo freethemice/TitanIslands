@@ -1,5 +1,7 @@
 package com.firesoftitan.play.titanbox.islands;
 
+import com.firesoftitan.play.titanbox.islands.guis.CompassGui;
+import com.firesoftitan.play.titanbox.islands.listeners.CompassGUIListener;
 import com.firesoftitan.play.titanbox.islands.listeners.MainListener;
 import com.firesoftitan.play.titanbox.islands.listeners.ProtectionListener;
 import com.firesoftitan.play.titanbox.islands.listeners.TabCompleteListener;
@@ -42,17 +44,19 @@ public class TitanIslands extends JavaPlugin {
         mainListener.registerEvents();
         protectionListener = new ProtectionListener();
         protectionListener.registerEvents();
+        CompassGUIListener compassGUIListener = new CompassGUIListener();
+        compassGUIListener.registerEvents();
         saveDefaultFiles();
         configManager = new ConfigManager();
         playerManager = new PlayerManager();
         new LangManager(configManager.getLanguage());
         tiFilePath = new File("plugins" + File.separator + this.getDescription().getName() + File.separator);
-        this.getCommand("tis").setTabCompleter(new TabCompleteListener());
-        this.getCommand("island").setTabCompleter(new TabCompleteListener());
-        this.getCommand("is").setTabCompleter(new TabCompleteListener());
+        Objects.requireNonNull(this.getCommand("tis")).setTabCompleter(new TabCompleteListener());
+        Objects.requireNonNull(this.getCommand("island")).setTabCompleter(new TabCompleteListener());
+        Objects.requireNonNull(this.getCommand("is")).setTabCompleter(new TabCompleteListener());
 
         File structuresFolder = new File(tiFilePath, File.separator + "structures" + File.separator);
-        for (File file : structuresFolder.listFiles()) {
+        for (File file : Objects.requireNonNull(structuresFolder.listFiles())) {
             String name = file.getName();
             if (name.toLowerCase().endsWith(".nbt")) {
                 String newName = name.substring(0, name.length() - 4);
@@ -60,10 +64,12 @@ public class TitanIslands extends JavaPlugin {
             }
         }
 
-        CubeSelectorManager.loadAll();
+        IslandManager.loadAll();
+        CubeManager.loadAll();
 
-        new IslandSpawnerRunnable().runTaskTimer(this, configManager.getTime() * 20, configManager.getTime() * 20);
+        new IslandSpawnerRunnable().runTaskTimer(this, configManager.getTime() * 20L, configManager.getTime() * 20L);
         new CompassRunnable().runTaskTimer(this, 10, 10);
+
 
     }
 
@@ -128,14 +134,24 @@ public class TitanIslands extends JavaPlugin {
     public void onDisable()
     {
         this.saveALL();
+        CompassRunnable.instance.shutdown();
     }
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
         try {
+            if (label.equalsIgnoreCase("com") || label.equalsIgnoreCase("cp") || label.equalsIgnoreCase("compass"))
+            {
+                if (sender instanceof Player) {
+                    CompassGui compassGUI = new CompassGui((Player) sender);
+                    compassGUI.showGUI();
+                    return true;
+                }
+
+            }
             if (label.equalsIgnoreCase("tis") || label.equalsIgnoreCase("island") || label.equalsIgnoreCase("is")) {
                 if (args.length > 0) {
                     if (args[0].equalsIgnoreCase("sethome") && sender instanceof Player) {
-                        CubeSelectorManager cubeSelectorManager = CubeSelectorManager.getCube(((Player) sender).getLocation());
-                        if (cubeSelectorManager == null || !playerManager.isOwnedByPlayer(((Player) sender), cubeSelectorManager)) {
+                        CubeManager cubeManager = CubeManager.getCube(((Player) sender).getLocation());
+                        if (cubeManager == null || !playerManager.isOwnedByPlayer(((Player) sender), cubeManager)) {
                             messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.mustbeinside"));
                             return true;
                         }
@@ -153,12 +169,12 @@ public class TitanIslands extends JavaPlugin {
                     }
                     if (args[0].equalsIgnoreCase("add") && sender instanceof Player) {
                         BlockFace facing = ((Player) sender).getFacing();
-                        CubeSelectorManager cubeSelectorManager = CubeSelectorManager.getCube(((Player) sender).getLocation());
-                        if (cubeSelectorManager == null || !playerManager.isOwnedByPlayer(((Player) sender), cubeSelectorManager)) {
+                        CubeManager cubeManager = CubeManager.getCube(((Player) sender).getLocation());
+                        if (cubeManager == null || !playerManager.isOwnedByPlayer(((Player) sender), cubeManager)) {
                             messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.mustbeinside"));
                             return true;
                         }
-                        Location check = cubeSelectorManager.getCenter();
+                        Location check = cubeManager.getCenter();
                         String name = args[1].toLowerCase();
                         StructureManager structure = StructureManager.getStructure(name);
                         if (structure == null) {
@@ -191,10 +207,11 @@ public class TitanIslands extends JavaPlugin {
                         int i = level - cost;
                         if (i < 0) i = 0;
                         ((Player) sender).setLevel(i);
-                        check = CubeSelectorManager.adjustLocation(name, check, facing);
-                        CubeSelectorManager build = structure.build(check);
-                        if (!CubeSelectorManager.isOverlapping(build)) {
-                            build.place(structure.getName());
+                        check = CubeManager.adjustLocation(name, check, facing);
+                        CubeManager build = structure.build(check);
+                        if (!CubeManager.isOverlapping(build)) {
+                            IslandManager islandManager = IslandManager.getIsland(cubeManager);
+                            build.place(islandManager, structure.getName());
                             playerManager.add((Player) sender, build);
                             messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("done"));
                         }
@@ -219,8 +236,8 @@ public class TitanIslands extends JavaPlugin {
                         if (args[0].equalsIgnoreCase("build") && sender instanceof Player) {
                             StructureManager structure = StructureManager.getStructure(args[1]);
                             Location location = ((Player) sender).getLocation().clone();
-                            CubeSelectorManager preBuild = structure.getPreBuild(location);
-                            boolean anyCubes = CubeSelectorManager.isOverlapping(preBuild);
+                            CubeManager preBuild = structure.getPreBuild(location);
+                            boolean anyCubes = CubeManager.isOverlapping(preBuild);
                             if (anyCubes) {
                                 messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.inside"));
                                 return true;
@@ -228,8 +245,8 @@ public class TitanIslands extends JavaPlugin {
                             //make sure nothing got mess-up when we checked it
                             structure = StructureManager.getStructure(args[1]);
                             location = ((Player) sender).getLocation().clone();
-                            CubeSelectorManager build = structure.build(location);
-                            build.place(structure.getName());
+                            CubeManager build = structure.build(location);
+                            build.place(new IslandManager(), structure.getName());
                         }
 
 
@@ -253,16 +270,16 @@ public class TitanIslands extends JavaPlugin {
 
     public void saveALL()
     {
-        CubeSelectorManager.saveAll();
+        IslandManager.saveAll();
+        CubeManager.saveAll();
         playerManager.save();
     }
-    private static Map<UUID, Boolean> adminMode = new HashMap<UUID, Boolean>();
+    private static final Map<UUID, Boolean> adminMode = new HashMap<UUID, Boolean>();
     public static boolean getAdminMode(Player player)
     {
         UUID uniqueId = player.getUniqueId();
         if (!adminMode.containsKey(uniqueId)) adminMode.put(uniqueId, false);
-        boolean adMode = adminMode.get(uniqueId);
-        return adMode;
+        return adminMode.get(uniqueId);
     }
     public static boolean toggleAdminMode(Player player)
     {
@@ -274,7 +291,6 @@ public class TitanIslands extends JavaPlugin {
     }
     public static boolean isAdmin(CommandSender sender)
     {
-        if (sender.isOp() || sender.hasPermission("titanbox.admin")) return true;
-        return false;
+        return sender.isOp() || sender.hasPermission("titanbox.admin");
     }
 }

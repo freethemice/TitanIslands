@@ -12,30 +12,35 @@ import java.util.List;
 import java.util.UUID;
 
 public class PlayerManager {
-    private SaveManager playerData = new SaveManager(TitanIslands.instance.getName(), "player_data");
+    private final SaveManager playerData = new SaveManager(TitanIslands.instance.getName(), "player_data");
     public static PlayerManager instants;
     public PlayerManager() {
         instants = this;
     }
-    private HashMap<String, Integer> structureCount = new HashMap<String, Integer>();
+    private final HashMap<String, Integer> structureCount = new HashMap<String, Integer>();
     public boolean hasPlayerJoinedBefore(Player player)
     {
         return playerData.contains(player.getUniqueId().toString());
     }
-    public void add(Player player, CubeSelectorManager cubeSelectorManager)
+    public void add(Player player, IslandManager islandManager)
     {
-        playerData.set(player.getUniqueId() + ".cubes." + cubeSelectorManager.getKey()+ ".key", cubeSelectorManager.getName());
+        playerData.set(player.getUniqueId() + ".islands." + islandManager.getId() + ".key", islandManager.getId());
+
+    }
+    public void add(Player player, CubeManager cubeManager)
+    {
+        playerData.set(player.getUniqueId() + ".cubes." + cubeManager.getId() + ".key", cubeManager.getName());
         int count = 0;
-        if (playerData.contains(player.getUniqueId() + ".counts." + cubeSelectorManager.getName()))
+        if (playerData.contains(player.getUniqueId() + ".counts." + cubeManager.getName()))
         {
-            count = playerData.getInt(player.getUniqueId() + ".counts." + cubeSelectorManager.getName());
+            count = playerData.getInt(player.getUniqueId() + ".counts." + cubeManager.getName());
         }
         count++;
-        playerData.set(player.getUniqueId() + ".counts." + cubeSelectorManager.getName(), count);
+        playerData.set(player.getUniqueId() + ".counts." + cubeManager.getName(), count);
     }
-    public int getCount(Player player, CubeSelectorManager cubeSelectorManager)
+    public int getCount(Player player, CubeManager cubeManager)
     {
-        return getCount(player,cubeSelectorManager.getName());
+        return getCount(player, cubeManager.getName());
     }
     public int getCount(Player player, String name)
     {
@@ -59,8 +64,7 @@ public class PlayerManager {
         name = name.toLowerCase();
         List<String> stringList = playerData.getStringList(player.getUniqueId() + ".unlocked");
         if (stringList == null) stringList = new ArrayList<String>();
-        boolean contains = stringList.contains(name);
-        return contains;
+        return stringList.contains(name);
 
     }
     public List<String> getUnlocked(Player player)
@@ -86,18 +90,32 @@ public class PlayerManager {
         }
         return locations;
     }
-    public boolean isOwnedByPlayer(Player player, CubeSelectorManager cubeSelectorManager)
+    public boolean isOwnedByPlayer(Player player, IslandManager islandManager)
     {
-        return playerData.contains(player.getUniqueId() + ".cubes." + cubeSelectorManager.getKey());
+        return playerData.contains(player.getUniqueId() + ".islands." + islandManager.getId());
     }
-    public Player getOwner(CubeSelectorManager cubeSelectorManager)
+    public boolean isOwnedByPlayer(Player player, CubeManager cubeManager)
+    {
+        return playerData.contains(player.getUniqueId() + ".cubes." + cubeManager.getId());
+    }
+    public Player getOwner(CubeManager cubeManager)
     {
         for (String key: playerData.getKeys()) {
-            if (playerData.contains(key + ".cubes." + cubeSelectorManager.getKey()))
+            if (playerData.contains(key + ".cubes." + cubeManager.getId()))
             {
                 UUID uuid = UUID.fromString(key);
-                Player player = Bukkit.getPlayer(uuid);
-                return player;
+                return Bukkit.getPlayer(uuid);
+            }
+        }
+        return null;
+    }
+    public Player getOwner(IslandManager islandManager)
+    {
+        for (String key: playerData.getKeys()) {
+            if (playerData.contains(key + ".islands." + islandManager.getId()))
+            {
+                UUID uuid = UUID.fromString(key);
+                return Bukkit.getPlayer(uuid);
             }
         }
         return null;

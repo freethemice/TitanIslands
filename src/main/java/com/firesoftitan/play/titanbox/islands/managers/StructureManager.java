@@ -17,9 +17,9 @@ import java.util.*;
 
 public class StructureManager {
 
+
     public static List<String> getAllIsland() {
-        List<String> outList = new ArrayList<String>(allStructures.keySet());
-        return outList;
+        return new ArrayList<String>(allStructures.keySet());
     }
     public static StructureManager getRandomIsland() {
         Map<String, Integer> nameToOdds = new HashMap<>();
@@ -67,8 +67,7 @@ public class StructureManager {
     {
         try {
             org.bukkit.structure.StructureManager structureManager = TitanIslands.instance.getServer().getStructureManager();
-            Structure structure = structureManager.loadStructure(section);
-            return structure;
+            return structureManager.loadStructure(section);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -78,90 +77,94 @@ public class StructureManager {
     {
         StructureManager structure1 = StructureManager.getStructure(name);
         Structure structure = load(structure1.nbtFile);
+        assert structure != null;
         BlockVector size = structure.getSize();
         Location location1 = new Location(location.getWorld(), location.getBlockX() + size.getBlockX(), location.getBlockY() + size.getBlockY(), location.getBlockZ() + size.getBlockZ());
-        CubeSelectorManager selectorTool = new CubeSelectorManager(location, location1);
+        CubeManager selectorTool = new CubeManager(location, location1);
         Location center = selectorTool.getCenterOffset();
         Location subtract = location.clone().subtract(center);
-        int highest = location.getWorld().getHighestBlockYAt(subtract);
+        int highest = Objects.requireNonNull(location.getWorld()).getHighestBlockYAt(subtract);
         subtract.setY(highest - structure1.getSeaLevelOffset() );
 
         return subtract.clone();
     }
-    public static CubeSelectorManager getPreBuild(Location location, File section)
+    public static CubeManager getPreBuild(Location location, File section)
     {
         Structure structure = load(section);
+        assert structure != null;
         BlockVector size = structure.getSize();
         Location location1 = new Location(location.getWorld(), location.getBlockX() + size.getBlockX(), location.getBlockY() + size.getBlockY(), location.getBlockZ() + size.getBlockZ());
-        CubeSelectorManager selectorTool = new CubeSelectorManager(location, location1);
-        return selectorTool;
+        return new CubeManager(location, location1);
     }
-    public static CubeSelectorManager build(Location location, File section, StructureRotation rotation)
+    public static CubeManager build(Location location, File section, StructureRotation rotation)
     {
         return build(location, section, rotation, 1);
     }
-    private static CubeSelectorManager build(Location location, File section, StructureRotation rotation, float all)
+    private static CubeManager build(Location location, File section, StructureRotation rotation, float all)
     {
         Structure structure = load(section);
+        assert structure != null;
         return build(location,structure,rotation,all);
     }
-    private static CubeSelectorManager build(Location location, Structure structure, StructureRotation rotation)
+    private static CubeManager build(Location location, Structure structure, StructureRotation rotation)
     {
         structure.place(location,true, rotation, Mirror.NONE, -1, 1, new Random());
         BlockVector size = structure.getSize();
         Location location1 = new Location(location.getWorld(), location.getBlockX() + size.getBlockX(), location.getBlockY() + size.getBlockY(), location.getBlockZ() + size.getBlockZ());
-        CubeSelectorManager selectorTool = new CubeSelectorManager(location, location1);
-        return selectorTool;
+        return new CubeManager(location, location1);
     }
-    private static CubeSelectorManager build(Location location, Structure structure, StructureRotation rotation, float all)
+    private static CubeManager build(Location location, Structure structure, StructureRotation rotation, float all)
     {
         structure.place(location,true, rotation, Mirror.NONE, -1, all, new Random());
         BlockVector size = structure.getSize();
         Location location1 = new Location(location.getWorld(), location.getBlockX() + size.getBlockX(), location.getBlockY() + size.getBlockY(), location.getBlockZ() + size.getBlockZ());
-        CubeSelectorManager selectorTool = new CubeSelectorManager(location, location1);
-        return selectorTool;
+        return new CubeManager(location, location1);
     }
-    private static HashMap<String, StructureManager> allStructures = new HashMap<String, StructureManager>();
+    private static final HashMap<String, StructureManager> allStructures = new HashMap<String, StructureManager>();
 
     public static StructureManager getStructure(String name) {
         return allStructures.get(name);
     }
     public static List<String> getStructures() {
-        List<String> stringList = new ArrayList<String>(allStructures.keySet());
-        return stringList;
+        return new ArrayList<String>(allStructures.keySet());
     }
 
 
-    private String filename;
-    private File nbtFile;
-    private File ymlFile;
-    private SettingsManager configManager;
-    private String jarNbtFile;
-    private String jarYmlFile;
-    public StructureManager(String filename)
+    private final File ymlFile;
+
+    private final File nbtFile;
+    private final SettingsManager configManager;
+
+    private final String name;
+
+    public StructureManager(String ymlName)
     {
-        this.filename = filename;
-        this.nbtFile = new File(TitanIslands.tiFilePath,  File.separator + "structures" +  File.separator + filename + ".nbt");
-        this.ymlFile = new File(TitanIslands.tiFilePath,  File.separator + "structures" +  File.separator + filename + ".yml");
-        this.jarNbtFile = "/defaults/structures/" + filename + ".nbt";
-        this.jarYmlFile = "/defaults/structures/" + filename + ".yml";
+
+        this.ymlFile = new File(TitanIslands.tiFilePath,  File.separator + "structures" +  File.separator + ymlName + ".yml");
+        String jarYmlFile = "/defaults/structures/" + ymlName + ".yml";
         boolean ymlExists = this.ymlFile.exists();
         configManager = new SettingsManager(ymlFile);
-        allStructures.put(configManager.getString("name").toLowerCase(), this);
+        String nbtName = configManager.getString("filename");
 
+        this.nbtFile = new File(TitanIslands.tiFilePath, File.separator + "structures" + File.separator + nbtName + ".nbt");
+        String jarNbtFile = "/defaults/structures/" + nbtName + ".nbt";
 
-        InputStream stream = getClass().getResourceAsStream(this.jarYmlFile);
+        name = ymlName.toLowerCase().replace(" ", "");
+
+        allStructures.put(this.getName(), this);
+        configManager.save();
+        InputStream stream = getClass().getResourceAsStream(jarYmlFile);
         if (stream == null && !ymlExists)
         {
             TitanIslands.tools.getMessageTool().sendMessageSystem("New File detected");
             stream = getClass().getResourceAsStream("/defaults/structures/sample.yml");
             SettingsManager settingsManager = new SettingsManager(stream);
-            settingsManager.set("name", this.filename);
-            settingsManager.set("title", TitanIslands.tools.getFormattingTool().fixCapitalization(this.filename));
+            settingsManager.set("filename", this.getName());
+            settingsManager.set("title", TitanIslands.tools.getFormattingTool().fixCapitalization(this.getName()));
             settingsManager.convertToFile(this.ymlFile);
             settingsManager.save();
             configManager.reload();
-            TitanIslands.tools.getMessageTool().sendMessageSystem(this.filename + " yml has been generated for new file.");
+            TitanIslands.tools.getMessageTool().sendMessageSystem(this.getName() + " yml has been generated for new file.");
         }else if (stream != null)
         {
             if (this.isAutoUpdate()) {
@@ -170,17 +173,19 @@ public class StructureManager {
                 if (!this.getVersion().equals(version)) {
                     try {
                         if (stream != null) {
-                            stream = getClass().getResourceAsStream(this.jarYmlFile);
+                            stream = getClass().getResourceAsStream(jarYmlFile);
                             // Copy the file from the JAR to the plugin folder
+                            assert stream != null;
                             Files.copy(stream, this.ymlFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                             stream.close();
-                            stream = getClass().getResourceAsStream(this.jarNbtFile);
+                            stream = getClass().getResourceAsStream(jarNbtFile);
                             if (stream != null) {
                                 Files.copy(stream, this.nbtFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                                 stream.close();
                             }
-                            TitanIslands.tools.getMessageTool().sendMessageSystem(this.filename + " has been updated from the jar");
+                            TitanIslands.tools.getMessageTool().sendMessageSystem(this.getName() + " has been updated from the jar");
                         }
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -189,17 +194,15 @@ public class StructureManager {
         }
 
     }
-    public CubeSelectorManager getPreBuild(Location location)
+    public CubeManager getPreBuild(Location location)
     {
-        Location finalLocation = StructureManager.getAdjustedPlacement(location, filename);
-        CubeSelectorManager build = StructureManager.getPreBuild(finalLocation, this.nbtFile);
-        return build;
+        Location finalLocation = StructureManager.getAdjustedPlacement(location, getName());
+        return StructureManager.getPreBuild(finalLocation, this.nbtFile);
     }
-    public CubeSelectorManager build(Location location)
+    public CubeManager build(Location location)
     {
-        Location finalLocation = StructureManager.getAdjustedPlacement(location, filename);
-        CubeSelectorManager build = StructureManager.build(finalLocation, this.nbtFile, StructureRotation.NONE);
-        return build;
+        Location finalLocation = StructureManager.getAdjustedPlacement(location, getName());
+        return StructureManager.build(finalLocation, this.nbtFile, StructureRotation.NONE);
     }
     public int getCost()
     {
@@ -243,13 +246,8 @@ public class StructureManager {
         return configManager.getBoolean("autoupdate");
     }
     public String getName() {
-        return configManager.getString("name").toLowerCase().replace(" ", "");
+        return this.name;
     }
-
-    public File getNbtFile() {
-        return nbtFile;
-    }
-
     public File getYmlFile() {
         return ymlFile;
     }

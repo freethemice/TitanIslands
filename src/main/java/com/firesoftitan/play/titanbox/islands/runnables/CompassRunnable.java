@@ -16,8 +16,8 @@ import static com.firesoftitan.play.titanbox.islands.TitanIslands.tools;
 public class CompassRunnable extends BukkitRunnable {
 
     public static CompassRunnable instance;
-    private Map<UUID, CompassManager> compassManagers = new HashMap<UUID, CompassManager>();
-    private List<CompassManager> managersToTick = new ArrayList<CompassManager>();
+    private final Map<UUID, CompassManager> compassManagers = new HashMap<UUID, CompassManager>();
+    private final List<CompassManager> managersToTick = new ArrayList<CompassManager>();
     public CompassRunnable() {
         instance = this;
     }
@@ -38,6 +38,10 @@ public class CompassRunnable extends BukkitRunnable {
         }
         return null;
     }
+    public boolean hasCompass(Player player)
+    {
+        return compassManagers.containsKey(player.getUniqueId());
+    }
     public void add(Player player, Location location)
     {
         CompassManager compassManager = new CompassManager(player, location);
@@ -45,11 +49,28 @@ public class CompassRunnable extends BukkitRunnable {
     }
     public void remove(Player player) {
         UUID playerId = player.getUniqueId();
+        remove(playerId);
+    }
+    public void remove(UUID playerId) {
+
         CompassManager manager = compassManagers.get(playerId);
         if (manager != null) {
             compassManagers.remove(playerId);
             managersToTick.remove(manager);
             manager.removeArrow();
+            manager.removeHologram();
+        }
+    }
+    public void shutdown()
+    {
+        try {
+            this.cancel();
+        } catch (IllegalStateException ignored) {
+
+        }
+        for(UUID uuid: compassManagers.keySet())
+        {
+            remove(uuid);
         }
     }
     @Override

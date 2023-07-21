@@ -11,6 +11,7 @@ error:
   limit: "&4You have reached your limit. &f"
   loading: "&4There was an error loading: "
   notenough: "&4Not enough xp to build this island, you need :&f"
+  nbterror: "couldn't load file: "
 adminmodeon: "&aAdmin mode is now &fON"
 adminmodeoff: "&aAdmin mode is now &fOFF"
 levels: "&a Levels."
@@ -22,6 +23,15 @@ none: "&fNone"
 announce: "&aA new islands has spawned at: &f"
 homeset: "&aYour home has been set."
 done: "&aDone!"
+blocks: " Blocks"
+gui:
+  compass:
+    title: "Compass Settings"
+    none: "&aHide Compass"
+    home: "&aHome"
+    closest: "&aClosest"
+    newest: "&aNewest"
+    random: "&aRandom"
 welcome:
   line_0: "&aWelcome to Titan Islands, this island is your very own island!"
   line_1: "&aWhen you explore and find new island you will unlock that"

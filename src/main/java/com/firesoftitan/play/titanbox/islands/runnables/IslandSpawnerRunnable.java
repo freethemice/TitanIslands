@@ -1,10 +1,7 @@
 package com.firesoftitan.play.titanbox.islands.runnables;
 
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
-import com.firesoftitan.play.titanbox.islands.managers.CubeSelectorManager;
-import com.firesoftitan.play.titanbox.islands.managers.LangManager;
-import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
-import com.firesoftitan.play.titanbox.islands.managers.StructureManager;
+import com.firesoftitan.play.titanbox.islands.managers.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -15,7 +12,7 @@ import java.util.List;
 import java.util.Random;
 
 public class IslandSpawnerRunnable extends BukkitRunnable {
-    private static Random random = new Random(System.currentTimeMillis());
+    private static final Random random = new Random(System.currentTimeMillis());
     public static IslandSpawnerRunnable instance;
     public IslandSpawnerRunnable() {
         super();
@@ -25,7 +22,7 @@ public class IslandSpawnerRunnable extends BukkitRunnable {
     @Override
     public void run() {
         List<Player> playerList = new ArrayList<Player>(Bukkit.getOnlinePlayers());
-        Location location = null;
+        Location location;
         if (!playerList.isEmpty()) {
             int i = random.nextInt(playerList.size());
             Player player = playerList.get(i);
@@ -64,12 +61,14 @@ public class IslandSpawnerRunnable extends BukkitRunnable {
         int count_max = TitanIslands.configManager.getCount_max() + 1;
         int count_min = TitanIslands.configManager.getCount_min();
         int size = random.nextInt(count_max - count_min) + count_min;
+        IslandManager islandManager = new IslandManager();
         for(int i2 = 0; i2 < size; i2++) {
             StructureManager structure = StructureManager.getRandomIsland();
-            Location check = CubeSelectorManager.adjustLocation(structure.getName(), randomLoc);
-            CubeSelectorManager build = structure.build(check);
-            if (!CubeSelectorManager.isOverlapping(build)) {
-                build.place(structure.getName());
+            assert structure != null;
+            Location check = CubeManager.adjustLocation(structure.getName(), randomLoc);
+            CubeManager build = structure.build(check);
+            if (!CubeManager.isOverlapping(build)) {
+                build.place(islandManager, structure.getName());
             }
         }
         if (TitanIslands.configManager.isAnnounce()) {

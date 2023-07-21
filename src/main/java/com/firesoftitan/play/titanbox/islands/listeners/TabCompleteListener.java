@@ -17,7 +17,7 @@ import java.util.List;
 public class TabCompleteListener implements TabCompleter {
     private static final String[] ADMIN_COMMANDS = { "spawn", "build", "admin"};
     private static final String[] NON_ADMIN_COMMANDS = {"home", "add", "sethome"};
-    private List<String> pluginNames = new ArrayList<String>();
+    private final List<String> pluginNames = new ArrayList<String>();
     @Nullable
     @Override
     public List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
@@ -44,12 +44,6 @@ public class TabCompleteListener implements TabCompleter {
                 List<String> unlocked = StructureManager.getStructures();
                 Commands.addAll(unlocked);
             }
-        }
-        if (args.length == 3) {
-
-        }
-        if (args.length == 4) {
-
         }
         //create new array
         final List<String> completions = new ArrayList<>();
