@@ -16,7 +16,7 @@ import java.util.List;
 
 public class TabCompleteListener implements TabCompleter {
     private static final String[] ADMIN_COMMANDS = { "spawn", "build", "admin"};
-    private static final String[] NON_ADMIN_COMMANDS = {"home", "add", "sethome"};
+    private static final String[] NON_ADMIN_COMMANDS = {"home", "add", "sethome", "count", "info"};
     private final List<String> pluginNames = new ArrayList<String>();
     @Nullable
     @Override

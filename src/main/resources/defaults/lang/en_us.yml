@@ -24,6 +24,7 @@ announce: "&aA new islands has spawned at: &f"
 homeset: "&aYour home has been set."
 done: "&aDone!"
 blocks: " Blocks"
+count: "&aNumber of islands: &f"
 gui:
   compass:
     title: "Compass Settings"
@@ -37,4 +38,5 @@ welcome:
   line_1: "&aWhen you explore and find new island you will unlock that"
   line_2: "&aisland, letting you build and expand your island "
   line_3: "&ausing the command, &f/is add"
-  line_4: "&aif you need help use the command, &f/is"
+  line_4: "&aIf you need help use the command, &f/is"
+  line_5: "&aTo find your way around use, &f/compass &aor &f/cp"

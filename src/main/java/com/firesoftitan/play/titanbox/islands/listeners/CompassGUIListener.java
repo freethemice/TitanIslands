@@ -3,6 +3,7 @@ package com.firesoftitan.play.titanbox.islands.listeners;
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
 import com.firesoftitan.play.titanbox.islands.guis.CompassGui;
 import com.firesoftitan.play.titanbox.islands.managers.CubeManager;
+import com.firesoftitan.play.titanbox.islands.managers.IslandManager;
 import com.firesoftitan.play.titanbox.islands.managers.LangManager;
 import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
 import com.firesoftitan.play.titanbox.islands.runnables.CompassRunnable;
@@ -50,21 +51,21 @@ public class CompassGUIListener  implements Listener
                                     }
                                     case "home" -> compassTargert = PlayerManager.instants.getHome(player);
                                     case "closest" -> {
-                                        CubeManager closestExcluding = CubeManager.getClosestExcluding(player.getLocation(), player);
+                                        IslandManager closestExcluding = IslandManager.getClosestExcluding(player.getLocation(), player);
                                         if (closestExcluding != null) {
-                                            compassTargert = closestExcluding.getCenter();
+                                            compassTargert = closestExcluding.getLocation();
                                         }
                                     }
                                     case "newest" -> {
-                                        CubeManager earliest = CubeManager.getNewest(player.getLocation());
+                                        IslandManager earliest = IslandManager.getNewest(player.getLocation());
                                         if (earliest != null) {
-                                            compassTargert = earliest.getCenter();
+                                            compassTargert = earliest.getLocation();
                                         }
                                     }
                                     case "random" -> {
-                                        CubeManager randomExcluding = CubeManager.getRandomExcluding(player);
+                                        IslandManager randomExcluding = IslandManager.getRandomExcluding(player);
                                         if (randomExcluding != null) {
-                                            compassTargert = randomExcluding.getCenter();
+                                            compassTargert = randomExcluding.getLocation();
                                         }
                                     }
                                 }

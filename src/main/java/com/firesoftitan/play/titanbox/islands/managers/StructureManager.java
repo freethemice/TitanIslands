@@ -1,6 +1,8 @@
 package com.firesoftitan.play.titanbox.islands.managers;
 
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
+import com.firesoftitan.play.titanbox.islands.enums.StructureTypeEnum;
+import com.firesoftitan.play.titanbox.libs.managers.SaveManager;
 import com.firesoftitan.play.titanbox.libs.managers.SettingsManager;
 import org.bukkit.Location;
 import org.bukkit.block.structure.Mirror;
@@ -17,8 +19,26 @@ import java.util.*;
 
 public class StructureManager {
 
+    private static final SaveManager structureData = new SaveManager(TitanIslands.instance.getName(), "structureData");
 
-    public static List<String> getAllIsland() {
+    public static void save()
+    {
+        structureData.save();
+    }
+    public static int getStructureCount(String name)
+    {
+        return structureData.getInt(name + ".count");
+    }
+    public static void setStructureCount(String name, int value)
+    {
+        structureData.set(name + ".count", value);
+    }
+
+
+    public static String[]  getAllIslandAsArray() {
+        return allStructures.keySet().toArray(new String[0]);
+    }
+    public static List<String> getAllIslandAsList() {
         return new ArrayList<String>(allStructures.keySet());
     }
     public static StructureManager getRandomIsland() {
@@ -121,6 +141,12 @@ public class StructureManager {
         return new CubeManager(location, location1);
     }
     private static final HashMap<String, StructureManager> allStructures = new HashMap<String, StructureManager>();
+    private static final HashMap<String, StructureManager> shoreStructures = new HashMap<String, StructureManager>();
+    private static final HashMap<String, StructureManager> inlandStructures = new HashMap<String, StructureManager>();
+    private static final HashMap<String, StructureManager> mineralStructures = new HashMap<String, StructureManager>();
+    private static final HashMap<String, StructureManager> structureStructures = new HashMap<String, StructureManager>();
+    private static final HashMap<String, StructureManager> animalStructures = new HashMap<String, StructureManager>();
+    private static final HashMap<String, StructureManager> woodStructures = new HashMap<String, StructureManager>();
 
     public static StructureManager getStructure(String name) {
         return allStructures.get(name);
@@ -128,7 +154,25 @@ public class StructureManager {
     public static List<String> getStructures() {
         return new ArrayList<String>(allStructures.keySet());
     }
+    public static List<String> getShoreStructures() {
+        return new ArrayList<String>(shoreStructures.keySet());
+    }
+    public static List<String> getInlandStructures() {
+        return new ArrayList<String>(inlandStructures.keySet());
+    }
 
+    public static List<String> getWoodStructures() {
+        return new ArrayList<String>(woodStructures.keySet());
+    }
+    public static List<String> getMineralStructures() {
+        return new ArrayList<String>(mineralStructures.keySet());
+    }
+    public static List<String> getStructureStructures() {
+        return new ArrayList<String>(structureStructures.keySet());
+    }
+    public static List<String> getAnimalStructures() {
+        return new ArrayList<String>(animalStructures.keySet());
+    }
 
     private final File ymlFile;
 
@@ -142,7 +186,7 @@ public class StructureManager {
 
         this.ymlFile = new File(TitanIslands.tiFilePath,  File.separator + "structures" +  File.separator + ymlName + ".yml");
         String jarYmlFile = "/defaults/structures/" + ymlName + ".yml";
-        boolean ymlExists = this.ymlFile.exists();
+
         configManager = new SettingsManager(ymlFile);
         String nbtName = configManager.getString("filename");
 
@@ -152,20 +196,22 @@ public class StructureManager {
         name = ymlName.toLowerCase().replace(" ", "");
 
         allStructures.put(this.getName(), this);
+        if (!structureData.contains(this.getName()))
+        {
+            structureData.set(this.getName() + ".count", 0);
+        }
+
+        String type = configManager.getString("type");
+        if (type.equalsIgnoreCase("shore")) shoreStructures.put(this.getName(), this);
+        if (type.equalsIgnoreCase("inland")) inlandStructures.put(this.getName(), this);
+        if (type.equalsIgnoreCase("mineral")) mineralStructures.put(this.getName(), this);
+        if (type.equalsIgnoreCase("structure")) structureStructures.put(this.getName(), this);
+        if (type.equalsIgnoreCase("animal")) animalStructures.put(this.getName(), this);
+        if (type.equalsIgnoreCase("wood")) woodStructures.put(this.getName(), this);
+
         configManager.save();
         InputStream stream = getClass().getResourceAsStream(jarYmlFile);
-        if (stream == null && !ymlExists)
-        {
-            TitanIslands.tools.getMessageTool().sendMessageSystem("New File detected");
-            stream = getClass().getResourceAsStream("/defaults/structures/sample.yml");
-            SettingsManager settingsManager = new SettingsManager(stream);
-            settingsManager.set("filename", this.getName());
-            settingsManager.set("title", TitanIslands.tools.getFormattingTool().fixCapitalization(this.getName()));
-            settingsManager.convertToFile(this.ymlFile);
-            settingsManager.save();
-            configManager.reload();
-            TitanIslands.tools.getMessageTool().sendMessageSystem(this.getName() + " yml has been generated for new file.");
-        }else if (stream != null)
+         if (stream != null)
         {
             if (this.isAutoUpdate()) {
                 SettingsManager settingsManager = new SettingsManager(stream);
@@ -212,6 +258,16 @@ public class StructureManager {
     {
         return configManager.getInt("sealevel") - 1;
     }
+    public double getHeightMap()
+    {
+        return configManager.getDouble("heightmap");
+    }
+
+    public StructureTypeEnum getType()
+    {
+        String type = configManager.getString("type").toLowerCase();
+        return StructureTypeEnum.getType(type);
+    }
     public int getOdds()
     {
         int odds = configManager.getInt("odds");
@@ -226,6 +282,11 @@ public class StructureManager {
     public String getTitle()
     {
         return configManager.getString("title");
+    }
+
+    public int getIslandLimit()
+    {
+        return configManager.getInt("limits.island");
     }
     public int getSpawnLimit()
     {

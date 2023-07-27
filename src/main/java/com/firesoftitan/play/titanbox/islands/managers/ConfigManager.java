@@ -7,15 +7,25 @@ import org.bukkit.World;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ConfigManager {
     public static ConfigManager instants;
-    private String language, world;
+    private String language, world, default_structure;
     private List<String> starting;
-    private int randomI,x,z;
-    private boolean world_boarder, announce, protection_creepers, protection_griefing,protection_creepers_notowned,
-            protection_griefing_notowned,protection_creepers_owned;
+    private int x,z;
+    private boolean world_boarder, announce, protection_wild_creepers, protection_wild_break, protection_not_owned_creepers,
+            protection_not_owned_break, protection_owned_creepers;
     private int distance_min, distance_max, time, count_min, count_max, closest;
+    private int size_col, size_row, max_islands, major;
+    private String default_starting_shore, default_starting_inland;
+    private boolean protection_wild_build;
+    private boolean protection_not_owned_build;
+    private boolean protection_wild_use;
+    private boolean protection_not_owned_use;
+    private boolean protection_wild_ignite;
+    private boolean protection_not_owned_ignite;
+
 
     public ConfigManager() {
         reload();
@@ -37,37 +47,48 @@ public class ConfigManager {
             configFile.set("settings.world.x", 20000);
             configFile.set("settings.world.z", 20000);
         }
-        if (!configFile.contains("settings.starting.islands"))
+        if (!configFile.contains("settings.starting.structures"))
         {
+            configFile.set("settings.starting.default.shore", "sand");
+            configFile.set("settings.starting.default.inland", "grass");
+            configFile.set("settings.starting.size.col", 5);
+            configFile.set("settings.starting.size.row", 5);
             List<String> starting = new ArrayList<String>();
+            starting.add("oak");
+            starting.add("oak");
             starting.add("starter");
             starting.add("oak");
             starting.add("oak");
             starting.add("stone");
             starting.add("stone");
-            starting.add("sand");
-            configFile.set("settings.starting.islands", starting);
-        }
-        if (!configFile.contains("settings.starting.random"))
-        {
-            configFile.set("settings.starting.random", 1);
+            starting.add("coal");
+            configFile.set("settings.starting.structures", starting);
         }
         if (!configFile.contains("settings.environment"))
         {
+            configFile.set("settings.environment.default.structure", "sand");
             configFile.set("settings.environment.distance.min", 200);
             configFile.set("settings.environment.distance.max", 500);
             configFile.set("settings.environment.distance.closest", 500);
             configFile.set("settings.environment.time", 1800);
+            configFile.set("settings.environment.max", 25);
+            configFile.set("settings.environment.major", 4);
             configFile.set("settings.environment.count.min", 1);
-            configFile.set("settings.environment.count.max", 3);
+            configFile.set("settings.environment.count.max", 10);
             configFile.set("settings.environment.announce", true);
         }
         if (!configFile.contains("settings.protection"))
         {
-            configFile.set("settings.protection.wild.griefing", false);
+            configFile.set("settings.protection.wild.use", true);
+            configFile.set("settings.protection.wild.break", true);
+            configFile.set("settings.protection.wild.build", false);
+            configFile.set("settings.protection.wild.ignite", true);
             configFile.set("settings.protection.wild.creepers", true);
-            configFile.set("settings.protection.islands.notowned.griefing", true);
-            configFile.set("settings.protection.islands.notowned.creepers", true);
+            configFile.set("settings.protection.islands.not_owned.use", true);
+            configFile.set("settings.protection.islands.not_owned.break", true);
+            configFile.set("settings.protection.islands.not_owned.build", true);
+            configFile.set("settings.protection.islands.not_owned.ignite", false);
+            configFile.set("settings.protection.islands.not_owned.creepers", false);
             configFile.set("settings.protection.islands.owned.creepers", true);
         }
         this.closest = configFile.getInt("settings.environment.distance.closest");
@@ -79,44 +100,115 @@ public class ConfigManager {
             configFile.set("settings.environment.distance.max", distance_max);
         }
 
-        this.protection_griefing = configFile.getBoolean("settings.protection.wild.griefing");
-        this.protection_creepers = configFile.getBoolean("settings.protection.wild.creepers");
-        this.protection_griefing_notowned = configFile.getBoolean("settings.protection.islands.notowned.griefing");
-        this.protection_creepers_notowned = configFile.getBoolean("settings.protection.islands.notowned.creepers");
-        this.protection_creepers_owned = configFile.getBoolean("settings.protection.islands.owned.creepers");
+        this.protection_wild_use = configFile.getBoolean("settings.protection.wild.use");
+        this.protection_wild_build = configFile.getBoolean("settings.protection.wild.build");
+        this.protection_wild_break = configFile.getBoolean("settings.protection.wild.break");
+        this.protection_wild_creepers = configFile.getBoolean("settings.protection.wild.creepers");
+        this.protection_wild_ignite = configFile.getBoolean("settings.protection.wild.ignite");
+        this.protection_not_owned_use = configFile.getBoolean("settings.protection.islands.not_owned.use");
+        this.protection_not_owned_build = configFile.getBoolean("settings.protection.islands.not_owned.build");
+        this.protection_not_owned_break = configFile.getBoolean("settings.protection.islands.not_owned.break");
+        this.protection_not_owned_creepers = configFile.getBoolean("settings.protection.islands.not_owned.creepers");
+        this.protection_not_owned_ignite = configFile.getBoolean("settings.protection.islands.not_owned.ignite");
+        this.protection_owned_creepers = configFile.getBoolean("settings.protection.islands.owned.creepers");
+        this.default_structure = configFile.getString("settings.environment.default.structure");
         this.time = configFile.getInt("settings.environment.time");
         this.announce = configFile.getBoolean("settings.environment.announce");
+        this.max_islands = configFile.getInt("settings.environment.max");
+        this.major = configFile.getInt("settings.environment.major");
         this.count_min = configFile.getInt("settings.environment.count.min");
         this.count_max = configFile.getInt("settings.environment.count.max");
         this.world = configFile.getString("settings.world.name");
         this.world_boarder = configFile.getBoolean("settings.world.world_boarder");
         this.x = configFile.getInt("settings.world.x");
         this.z = configFile.getInt("settings.world.z");
-        this.starting = configFile.getStringList("settings.starting.islands");
-        this.randomI = configFile.getInt("settings.starting.random");
+        this.starting = configFile.getStringList("settings.starting.structures");
         this.language = configFile.getString("settings.language");
+        this.size_col = configFile.getInt("settings.starting.size.col");
+        this.size_row = configFile.getInt("settings.starting.size.row");
+        this.default_starting_shore = configFile.getString("settings.starting.default.shore");
+        this.default_starting_inland = configFile.getString("settings.starting.default.inland");
         configFile.save();
 
     }
 
-    public boolean isProtection_creepers_owned() {
-        return protection_creepers_owned;
+    public int getMajor() {
+        return major;
     }
 
-    public boolean isProtection_creepers_notowned() {
-        return protection_creepers_notowned;
+    public static ConfigManager getInstants() {
+        return instants;
     }
 
-    public boolean isProtection_griefing_notowned() {
-        return protection_griefing_notowned;
+    public boolean isProtection_wild_ignite() {
+        return protection_wild_ignite;
     }
 
-    public boolean isProtection_creepers() {
-        return protection_creepers;
+    public boolean isProtection_not_owned_ignite() {
+        return protection_not_owned_ignite;
     }
 
-    public boolean isProtection_griefing() {
-        return protection_griefing;
+    public boolean isProtection_wild_build() {
+        return protection_wild_build;
+    }
+
+    public boolean isProtection_not_owned_build() {
+        return protection_not_owned_build;
+    }
+
+    public boolean isProtection_wild_use() {
+        return protection_wild_use;
+    }
+
+    public boolean isProtection_not_owned_use() {
+        return protection_not_owned_use;
+    }
+
+    public int getMax_islands() {
+        return max_islands;
+    }
+
+    public String getDefault_starting_shore() {
+        if (StructureManager.getStructure(default_starting_shore) == null) return Objects.requireNonNull(StructureManager.getRandomIsland()).getName();
+        return default_starting_shore;
+    }
+
+    public String getDefault_starting_inland() {
+        if (StructureManager.getStructure(default_starting_shore) == null) return Objects.requireNonNull(StructureManager.getRandomIsland()).getName();
+        return default_starting_inland;
+    }
+
+    public int getSize_col() {
+        return Math.max(size_col, 1);
+    }
+
+    public int getSize_row() {
+        return Math.max(size_row, 1);
+    }
+
+    public String getDefaultStructure()
+    {
+        return this.default_structure;
+    }
+
+    public boolean isProtection_owned_creepers() {
+        return protection_owned_creepers;
+    }
+
+    public boolean isProtection_not_owned_creepers() {
+        return protection_not_owned_creepers;
+    }
+
+    public boolean isProtection_not_owned_break() {
+        return protection_not_owned_break;
+    }
+
+    public boolean isProtection_wild_creepers() {
+        return protection_wild_creepers;
+    }
+
+    public boolean isProtection_wild_break() {
+        return protection_wild_break;
     }
 
     public int getClosest() {
@@ -171,7 +263,4 @@ public class ConfigManager {
         return new ArrayList<>(starting);
     }
 
-    public int getRandomI() {
-        return randomI;
-    }
 }

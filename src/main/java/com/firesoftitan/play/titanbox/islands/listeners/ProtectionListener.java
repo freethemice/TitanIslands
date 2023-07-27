@@ -1,9 +1,11 @@
 package com.firesoftitan.play.titanbox.islands.listeners;
 
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
+import com.firesoftitan.play.titanbox.islands.enums.ProtectionEnum;
 import com.firesoftitan.play.titanbox.islands.managers.CubeManager;
 import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.EntityType;
@@ -15,6 +17,7 @@ import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 
 import java.util.UUID;
@@ -34,7 +37,7 @@ public class ProtectionListener  implements Listener {
     }
     @EventHandler(priority = EventPriority.LOWEST)  
     public void onBlockBreakEvent(BlockBreakEvent event) {
-        if (!canAccess(event.getPlayer(), event.getBlock()))
+        if (!canAccess(event.getPlayer(), event.getBlock(),ProtectionEnum.BREAK))
         {
             event.setCancelled(true);
         }
@@ -42,7 +45,7 @@ public class ProtectionListener  implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)  
     public void onBlockPlaceEvent(BlockPlaceEvent event) {
-        if (!canAccess(event.getPlayer(), event.getBlock()))
+        if (!canAccess(event.getPlayer(), event.getBlock(), ProtectionEnum.BUILD))
         {
             event.setCancelled(true);
         }
@@ -51,9 +54,10 @@ public class ProtectionListener  implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)  
     public void onPlayerInteractEvent(PlayerInteractEvent event) {
         Block clickedBlock = event.getClickedBlock();
+        ItemStack itemStack = event.getItem();
+        if (itemStack == null) itemStack = new ItemStack(Material.AIR);
         if (clickedBlock == null) return;
-        if (clickedBlock.getType().toString().toLowerCase().contains("door")) return;
-        if (!canAccess(event.getPlayer(), clickedBlock))
+        if (!canAccess(event.getPlayer(), clickedBlock, ProtectionEnum.USE))
         {
             event.setCancelled(true);
         }
@@ -62,7 +66,8 @@ public class ProtectionListener  implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)  
     public void onBlockIgniteEvent(BlockIgniteEvent event) {
         if (event.getIgnitingBlock() == null) return;
-        if (!canAccess(event.getPlayer(), event.getIgnitingBlock()))
+        if (event.getPlayer() == null) return;
+        if (!canAccess(event.getPlayer(), event.getIgnitingBlock(), ProtectionEnum.IGNITE))
         {
             event.setCancelled(true);
         }
@@ -130,15 +135,15 @@ public class ProtectionListener  implements Listener {
     public void onEntityExplodeEvent(EntityExplodeEvent event) {
         if (event.getEntity().getType() == EntityType.CREEPER || event.getEntity().getType() == EntityType.WITHER_SKULL || event.getEntity().getType() == EntityType.FIREBALL || event.getEntity().getType() == EntityType.LIGHTNING) {
             CubeManager cubeA = CubeManager.getCube(event.getLocation());
-            if (cubeA == null && !configManager.isProtection_creepers()) {
+            if (cubeA == null && !configManager.isProtection_wild_creepers()) {
                 event.setCancelled(true);
                 return;
             }
             UUID owner = PlayerManager.instants.getOwner(cubeA);
-            if (owner == null && !configManager.isProtection_creepers_notowned()) {
+            if (owner == null && !configManager.isProtection_not_owned_creepers()) {
                 event.setCancelled(true);
             } else {
-                if (configManager.isProtection_creepers_owned()) {
+                if (configManager.isProtection_owned_creepers()) {
                     event.setCancelled(true);
                 }
             }
@@ -164,35 +169,60 @@ public class ProtectionListener  implements Listener {
         CubeManager cubeB = CubeManager.getCube(locationB);
         if (cubeA == null && cubeB != null) return false;
         if (cubeA != null && cubeB == null) return false;
-        if (cubeA == null && cubeB == null) return configManager.isProtection_griefing();
+        if (cubeA == null && cubeB == null) return configManager.isProtection_wild_break();
         UUID ownerA = PlayerManager.instants.getOwner(cubeA);
         UUID ownerB = PlayerManager.instants.getOwner(cubeB);
+        if (ownerA == null && ownerB == null) return true;
+        if (ownerA == null || ownerB == null) return false;
         return ownerA.equals(ownerB);
     }
     private boolean isProtected(Location location)
     {
         CubeManager cube = CubeManager.getCube(location);
-        if (cube == null) return configManager.isProtection_griefing(); //stop player from building in the wild
+        if (cube == null) return configManager.isProtection_wild_break(); //stop player from building in the wild
         UUID owner = PlayerManager.instants.getOwner(cube);
-        if (owner == null) return configManager.isProtection_griefing_notowned();
+        if (owner == null) return configManager.isProtection_not_owned_break();
         return true;
     }
     private boolean isProtected(Block block)
     {
         return isProtected(block.getLocation());
     }
-    private boolean canAccess(Player player, Block block)
-    {
-        return canAccess(player, block.getLocation());
+    private boolean canAccess(Player player, Block block, ProtectionEnum action) {
+        return canAccess(player, block.getLocation(), action);
     }
-    private boolean canAccess(Player player, Location location)
-    {
+    private boolean canAccess(Player player, Location location, ProtectionEnum action) {
+
         if (TitanIslands.getAdminMode(player)) return true;
+
         CubeManager cube = CubeManager.getCube(location);
-        if (cube == null) return configManager.isProtection_griefing(); //stop player from building in the wild
+
+        if (cube == null) {
+            if (action == ProtectionEnum.BREAK) {
+                return configManager.isProtection_wild_break();
+            } else if (action == ProtectionEnum.USE) {
+                return configManager.isProtection_wild_use();
+            } else if (action == ProtectionEnum.BUILD) {
+                return configManager.isProtection_wild_build();
+            } else if (action == ProtectionEnum.IGNITE) {
+                return configManager.isProtection_wild_ignite();
+            }
+        }
+
         UUID ownedByPlayer = PlayerManager.instants.getOwner(cube);
-        if (ownedByPlayer == null) return configManager.isProtection_griefing_notowned(); //
+
+        if (ownedByPlayer == null) {
+            if (action == ProtectionEnum.BREAK) {
+                return configManager.isProtection_not_owned_break();
+            } else if (action == ProtectionEnum.USE) {
+                return configManager.isProtection_not_owned_use();
+            } else if (action == ProtectionEnum.BUILD) {
+                return configManager.isProtection_not_owned_build();
+            } else if (action == ProtectionEnum.IGNITE) {
+                return configManager.isProtection_not_owned_ignite();
+            }
+        }
+
         return player.getUniqueId().equals(ownedByPlayer);
     }
-    
 }

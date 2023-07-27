@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import static com.firesoftitan.play.titanbox.islands.TitanIslands.playerManager;
+
 public class PlayerManager {
     private final SaveManager playerData = new SaveManager(TitanIslands.instance.getName(), "player_data");
     public static PlayerManager instants;
@@ -92,6 +94,7 @@ public class PlayerManager {
     }
     public boolean isOwnedByPlayer(Player player, IslandManager islandManager)
     {
+        System.out.println(player.getName() + ":" + islandManager.getId() + ":" + playerData.contains(player.getUniqueId() + ".islands." + islandManager.getId()));
         return playerData.contains(player.getUniqueId() + ".islands." + islandManager.getId());
     }
     public boolean isOwnedByPlayer(Player player, CubeManager cubeManager)

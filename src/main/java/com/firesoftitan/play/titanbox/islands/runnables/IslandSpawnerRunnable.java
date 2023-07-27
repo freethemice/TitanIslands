@@ -4,6 +4,7 @@ import com.firesoftitan.play.titanbox.islands.TitanIslands;
 import com.firesoftitan.play.titanbox.islands.managers.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -14,6 +15,7 @@ import java.util.Random;
 public class IslandSpawnerRunnable extends BukkitRunnable {
     private static final Random random = new Random(System.currentTimeMillis());
     public static IslandSpawnerRunnable instance;
+    private int count = 0;
     public IslandSpawnerRunnable() {
         super();
         instance = this;
@@ -21,23 +23,36 @@ public class IslandSpawnerRunnable extends BukkitRunnable {
 
     @Override
     public void run() {
+        List<Location> homes = PlayerManager.instants.getHomes();
         List<Player> playerList = new ArrayList<Player>(Bukkit.getOnlinePlayers());
-        Location location;
-        if (!playerList.isEmpty()) {
-            int i = random.nextInt(playerList.size());
-            Player player = playerList.get(i);
-            location = PlayerManager.instants.getHome(player);
-        }
-        else
+        if (!playerList.isEmpty())
         {
-            //no ones online
-            List<Location> homes = PlayerManager.instants.getHomes();
-            if (homes.isEmpty()) return;
-            int i = random.nextInt(homes.size());
-            location = homes.get(i).clone();
+            homes = new ArrayList<Location>();
+            for(Player player: playerList)
+            {
+                homes.add(player.getLocation().clone());
+            }
+        }
+        Location location;
+        count++;
+        if (count > ConfigManager.getInstants().getMajor())
+        {
+            location = ConfigManager.instants.getWorld().getSpawnLocation().clone();
+            count = 0;
+        }
+        else {
+            do {
+                if (homes.isEmpty()) return;
+                int i = random.nextInt(homes.size());
+                location = homes.get(i).clone();
+                homes.remove(i);
+                if (ConfigManager.instants.getMax_islands() < 0) break;
+            } while (IslandManager.getSurrounding(location).size() >= ConfigManager.instants.getMax_islands());
         }
 
         // Get minimum and maximum distance from player
+
+
         IslandSpawnerRunnable.spawnRandomIsland(location);
 
     }
@@ -58,23 +73,13 @@ public class IslandSpawnerRunnable extends BukkitRunnable {
         // Add offsets to player location
         Location randomLoc = location.clone().add(xOffset, 0, zOffset);
 
-        int count_max = TitanIslands.configManager.getCount_max() + 1;
-        int count_min = TitanIslands.configManager.getCount_min();
-        int size = random.nextInt(count_max - count_min) + count_min;
-        IslandManager islandManager = new IslandManager();
-        for(int i2 = 0; i2 < size; i2++) {
-            StructureManager structure = StructureManager.getRandomIsland();
-            assert structure != null;
-            Location check = CubeManager.adjustLocation(structure.getName(), randomLoc);
-            CubeManager build = structure.build(check);
-            if (!CubeManager.isOverlapping(build)) {
-                build.place(islandManager, structure.getName());
-            }
-        }
+        IslandManager.generateIsland(randomLoc);
+
         if (TitanIslands.configManager.isAnnounce()) {
             List<Player> playerList = new ArrayList<Player>(Bukkit.getOnlinePlayers());
             if (!playerList.isEmpty()) {
                 for (Player playerA : playerList) {
+                    playerA.playSound(playerA.getLocation(), Sound.BLOCK_ANVIL_PLACE, 1, 1);
                     playerA.sendMessage(LangManager.instants.getMessage("announce") + randomLoc.getBlockX() + ", " + randomLoc.getBlockZ());
                 }
             }

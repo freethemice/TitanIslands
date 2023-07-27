@@ -6,6 +6,7 @@ import com.firesoftitan.play.titanbox.islands.runnables.CompassRunnable;
 import com.firesoftitan.play.titanbox.islands.runnables.IslandSpawnerRunnable;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -14,6 +15,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.plugin.PluginManager;
@@ -42,37 +44,14 @@ public class MainListener implements Listener {
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
 
-/*        if(event.getAction() == Action.LEFT_CLICK_AIR ||
-                event.getAction() == Action.RIGHT_CLICK_AIR) {
-            Player player = event.getPlayer();
-            if (player.isInsideVehicle()) {
-*//*                CubeSelectorManager closestExcluding = CubeSelectorManager.getClosestExcluding(player.getLocation(), player);
-                if (closestExcluding != null)CompassRunnable.instance.changeLocation(player, closestExcluding.getCenter());*//*
-                CompassGui compassGUI = new CompassGui(player);
-                compassGUI.showGUI();
-
-
-            }
-            // Player pressed a key
-        }*/
     }
     @EventHandler
     public void onVehicleEnterEvent(VehicleEnterEvent event) {
 
-        if (event.getEntered().getType() == EntityType.PLAYER)
-        {
-            Player player = (Player)event.getEntered();
-            CompassRunnable.instance.add(player, PlayerManager.instants.getHome(player));
-        }
     }
     @EventHandler
-    public void onVehicleEnterEvent(VehicleExitEvent event) {
+    public void onVehicleExitEvent(VehicleExitEvent event) {
 
-        if (event.getExited().getType() == EntityType.PLAYER)
-        {
-            Player player = (Player)event.getExited();
-            CompassRunnable.instance.remove(player);
-        }
     }
     @EventHandler
     public void onPlayerMoveEvent(PlayerMoveEvent event) {
@@ -107,6 +86,7 @@ public class MainListener implements Listener {
                         if (personalLimit == 0) txtAmount = LangManager.instants.getMessage("none");
                         txtAmount = txtAmount + LangManager.instants.getMessage("these");
                         messageTool.sendMessagePlayer(player, LangManager.instants.getMessage("build") + txtAmount);
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                     }
                 }else {
                     CubeManager closest = CubeManager.getClosest(location);
@@ -126,8 +106,14 @@ public class MainListener implements Listener {
         }
     }
     @EventHandler
+    public void onPlayerQuitEvent(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        CompassRunnable.instance.remove(player);
+    }
+    @EventHandler
     public void onPlayerJoinEvent(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+
         if (!playerManager.hasPlayerJoinedBefore(player))
         {
             World world = configManager.getWorld();
@@ -152,6 +138,7 @@ public class MainListener implements Listener {
                 public void run() {
                     Location location2 = new Location(world, finalLocation.getBlockX(), world.getHighestBlockYAt(finalLocation) + 2, finalLocation.getBlockZ());
                     playerManager.setHome(player, location2.clone());
+
                     player.teleport(location2.clone());
                     for(int i = 0; i < 100; i++)
                     {
@@ -160,35 +147,20 @@ public class MainListener implements Listener {
                     }
                 }
             }.runTaskLater(instance, 10);
-            List<String> starting = configManager.getStarting();
-            int randomI = configManager.getRandomI();
-            for (int i = 0; i < randomI; i++) {
-                StructureManager randomIsland = StructureManager.getRandomIsland();
-                assert randomIsland != null;
-                starting.add(randomIsland.getName());
-            }
             playerManager.unlock(player,"empty");
-            IslandManager islandManager = new IslandManager();
-            for(String iKey: starting)
-            {
+            IslandManager.generateIsland(player, location);
 
-                try {
-                    Location check = CubeManager.adjustLocation(iKey, location);
-                    StructureManager structure = StructureManager.getStructure(iKey);
-                    CubeManager build = structure.build(check);
-                    if (!CubeManager.isOverlapping(build)) {
-                        build.place(islandManager, structure.getName());
-                        playerManager.add(player, build);
-                        //if (structure.isUnlockable()) playerManager.unlock(player, build.getName());
-                        location = build.getCenter();
-                    }
-                } catch (Exception e) {
-                    messageTool.sendMessageSystem(LangManager.instants.getMessage("error.loading") + iKey);
-                    messageTool.sendMessageSystem("");
+        }
+        else
+        {
+            //This needs to be removed
 
-                    e.printStackTrace();
-                }
+            Location location = PlayerManager.instants.getHome(player);
+            if (location != null) {
+                IslandManager island = IslandManager.getIsland(location);
+                if (island != null) playerManager.add(player, island);
             }
+            //This needs to be removed
         }
 
     }

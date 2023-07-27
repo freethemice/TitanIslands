@@ -58,7 +58,7 @@ public class TitanIslands extends JavaPlugin {
         File structuresFolder = new File(tiFilePath, File.separator + "structures" + File.separator);
         for (File file : Objects.requireNonNull(structuresFolder.listFiles())) {
             String name = file.getName();
-            if (name.toLowerCase().endsWith(".nbt")) {
+            if (name.toLowerCase().endsWith(".yml")) {
                 String newName = name.substring(0, name.length() - 4);
                 new StructureManager(newName);
             }
@@ -69,7 +69,6 @@ public class TitanIslands extends JavaPlugin {
 
         new IslandSpawnerRunnable().runTaskTimer(this, configManager.getTime() * 20L, configManager.getTime() * 20L);
         new CompassRunnable().runTaskTimer(this, 10, 10);
-
 
     }
 
@@ -217,7 +216,11 @@ public class TitanIslands extends JavaPlugin {
                         }
                         return true;
                     }
-                    if (args[0].equalsIgnoreCase("check")) {
+                    if (args[0].equalsIgnoreCase("count")) {
+
+                        messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("count") + IslandManager.getCount());
+                    }
+                    if (args[0].equalsIgnoreCase("info")) {
                         CubeManager cubeManager = CubeManager.getCube(((Player) sender).getLocation());
 
                         if (cubeManager == null) {
@@ -286,6 +289,7 @@ public class TitanIslands extends JavaPlugin {
 
     public void saveALL()
     {
+        StructureManager.save();
         IslandManager.saveAll();
         CubeManager.saveAll();
         playerManager.save();
