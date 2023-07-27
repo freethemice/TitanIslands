@@ -407,14 +407,17 @@ public class IslandManager {
     private Location location;
     private final Long created_time;
     private final Map<UUID, CubeManager> cubes = new HashMap<UUID, CubeManager>();
+    private final List<UUID> friends;
     public IslandManager() {
         id = generateID();
         created_time = System.currentTimeMillis();
         IslandManager.islands.put(id, this);
+        friends = new ArrayList<UUID>();
     }
     public IslandManager(SaveManager saveManager) {
         id = saveManager.getUUID("id");
         created_time = saveManager.getLong("time");
+        friends = saveManager.getUUIDList("friends");
         IslandManager.islands.put(id, this);
     }
     public SaveManager save()
@@ -422,7 +425,24 @@ public class IslandManager {
         SaveManager saveManager = new SaveManager();
         saveManager.set("id", this.id);
         saveManager.set("time", this.created_time);
+        saveManager.set("friends", this.friends);
         return saveManager;
+    }
+
+    public List<UUID> getFriends()
+    {
+        return new ArrayList<UUID>(friends);
+    }
+    public boolean isFriend(Player player) {
+        return friends.contains(player.getUniqueId());
+    }
+    public void addFriend(Player player)
+    {
+        friends.add(player.getUniqueId());
+    }
+    public void removeFriend(Player player)
+    {
+        friends.remove(player.getUniqueId());
     }
     public Location getLocation() {
         if (location == null) return null;

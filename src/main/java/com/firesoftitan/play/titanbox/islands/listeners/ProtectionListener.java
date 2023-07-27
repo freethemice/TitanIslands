@@ -2,7 +2,9 @@ package com.firesoftitan.play.titanbox.islands.listeners;
 
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
 import com.firesoftitan.play.titanbox.islands.enums.ProtectionEnum;
+import com.firesoftitan.play.titanbox.islands.managers.ConfigManager;
 import com.firesoftitan.play.titanbox.islands.managers.CubeManager;
+import com.firesoftitan.play.titanbox.islands.managers.IslandManager;
 import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -19,6 +21,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import static com.firesoftitan.play.titanbox.islands.TitanIslands.configManager;
@@ -167,6 +170,8 @@ public class ProtectionListener  implements Listener {
     }
     private boolean sameOwner(Location locationA, Location locationB)
     {
+        if (!Objects.requireNonNull(locationA.getWorld()).getName().equals(ConfigManager.getInstants().getWorld().getName())) return true;
+        if (!Objects.requireNonNull(locationB.getWorld()).getName().equals(ConfigManager.getInstants().getWorld().getName())) return true;
         CubeManager cubeA = CubeManager.getCube(locationA);
         CubeManager cubeB = CubeManager.getCube(locationB);
         if (cubeA == null && cubeB != null) return false;
@@ -180,6 +185,7 @@ public class ProtectionListener  implements Listener {
     }
     private boolean isProtected(Location location)
     {
+        if (!Objects.requireNonNull(location.getWorld()).getName().equals(ConfigManager.getInstants().getWorld().getName())) return false;
         CubeManager cube = CubeManager.getCube(location);
         if (cube == null) return configManager.isProtection_wild_break(); //stop player from building in the wild
         UUID owner = PlayerManager.instants.getOwner(cube);
@@ -194,7 +200,7 @@ public class ProtectionListener  implements Listener {
         return canAccess(player, block.getLocation(), action);
     }
     private boolean canAccess(Player player, Location location, ProtectionEnum action) {
-
+        if (!Objects.requireNonNull(location.getWorld()).getName().equals(ConfigManager.getInstants().getWorld().getName())) return true;
         if (TitanIslands.getAdminMode(player)) return true;
 
         CubeManager cube = CubeManager.getCube(location);
@@ -225,6 +231,15 @@ public class ProtectionListener  implements Listener {
             }
         }
 
-        return player.getUniqueId().equals(ownedByPlayer);
+        boolean equals = player.getUniqueId().equals(ownedByPlayer);
+        if (!equals)
+        {
+            if (cube != null) {
+                IslandManager island = cube.getIsland();
+                if (island != null) return island.isFriend(player);
+            }
+        }
+
+        return equals;
     }
 }

@@ -30,7 +30,7 @@ public class IslandSpawnerRunnable extends BukkitRunnable {
             homes = new ArrayList<Location>();
             for(Player player: playerList)
             {
-                homes.add(player.getLocation().clone());
+                if (player.getWorld().getName().equals(ConfigManager.instants.getWorld().getName())) homes.add(player.getLocation().clone());
             }
         }
         Location location;

@@ -21,6 +21,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 
@@ -58,7 +59,7 @@ public class MainListener implements Listener {
         Location location = player.getLocation().clone();
         // The Location you want to point to
 
-
+        if (!Objects.requireNonNull(location.getWorld()).getName().equals(ConfigManager.getInstants().getWorld().getName())) return;
         //arrow.setRotation(yaw, pitch);
 
         if (last == null) {
@@ -148,22 +149,7 @@ public class MainListener implements Listener {
             IslandManager.generateIsland(player, location);
 
         }
-        else
-        {
-            //This needs to be removed
-
-            Location location = PlayerManager.instants.getHome(player);
-            if (location != null) {
-                IslandManager island = IslandManager.getIsland(location);
-                if (island != null) playerManager.add(player, island);
-            }
-            //This needs to be removed
-        }
-
     }
-
-
-
 }
 
 
