@@ -62,7 +62,7 @@ public class IslandManager {
                 for (int col = 0; col < size_col; col++) {
                     island[row][col] = ConfigManager.instants.getDefault_starting_shore();
                     if ((row != 0 && row != size_row - 1) & (col != 0 && col != size_col - 1)) {
-                        if (starting.size() > 0) {
+                        if (!starting.isEmpty()) {
                             island[row][col] = starting.get(0);
                             starting.remove(0);
                         }
@@ -188,24 +188,23 @@ public class IslandManager {
         List<String> validWords = new ArrayList<>();
         String defaultWord = null;
         double defaultOdds = 0;
-        for (int i = 0; i < words.size(); i++) {
-            StructureManager structure = StructureManager.getStructure(words.get(i));
+        for (String word : words) {
+            StructureManager structure = StructureManager.getStructure(word);
             double height = structure.getHeightMap();
-            double spawnOddsValue = structure.getOdds();;
+            double spawnOddsValue = structure.getOdds();
             if (defaultWord == null || spawnOddsValue > defaultOdds) {
-                defaultWord = words.get(i);
+                defaultWord = word;
                 defaultOdds = spawnOddsValue;
             }
-            if ((structure.getType() == StructureTypeEnum.SHORE|| randomValue < height) && Math.random() < spawnOddsValue / 100.0) {
+            if ((structure.getType() == StructureTypeEnum.SHORE || randomValue < height) && Math.random() < spawnOddsValue / 100.0) {
                 if (structure.getType() == StructureTypeEnum.MINERAL
                         || structure.getType() == StructureTypeEnum.BUILDING
-                        || structure.getType() == StructureTypeEnum.ANIMAL)
-                {
+                        || structure.getType() == StructureTypeEnum.ANIMAL) {
                     // Ensure the selected word doesn't touch shore words for mineral and structure types
                     if (!touchesShore(info)) {
-                        validWords.add(words.get(i));
+                        validWords.add(word);
                     }
-                }else validWords.add(words.get(i));
+                } else validWords.add(word);
             }
         }
 
@@ -298,7 +297,7 @@ public class IslandManager {
                     double distanceFromCenter = Math.sqrt((i - centerX) * (i - centerX) + (j - centerY) * (j - centerY));
                     double normalizedDistance = distanceFromCenter / Math.max(centerX, centerY); // Normalize distance to [0, 1]
 
-                    // Adjust the noise value using distance from center and amplitude
+                    // Adjust the noise value using distance from the center and amplitude
                     double adjustedNoise = (wx * dot00 + (1 - wx) * dot10) * (1 - wy) + (wx * dot01 + (1 - wx) * dot11) * wy;
                     noise[i][j] += adjustedNoise * amplitude * normalizedDistance; // Use distance as a factor
                 }
@@ -440,7 +439,7 @@ public class IslandManager {
 
     public void add(CubeManager cubeManager)
     {
-        if (cubes.size() == 0) location = cubeManager.getCenter().clone();
+        if (cubes.isEmpty()) location = cubeManager.getCenter().clone();
         cubes.put(cubeManager.getId(), cubeManager);
     }
     public boolean hasCube(CubeManager cubeManager)

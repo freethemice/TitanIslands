@@ -38,8 +38,6 @@ public class IslandMakerRunnable extends BukkitRunnable {
             height = build.getDepth();
             build.place(islandManager, structure.getName());
             if (player != null) playerManager.add(player, build);
-            //if (structure.isUnlockable()) playerManager.unlock(player, build.getName());
-            //location = build.getCenter();
         }
         col++;
         if (col >= island[0].length)

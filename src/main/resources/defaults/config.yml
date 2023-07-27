@@ -6,7 +6,7 @@ settings:
       break: true #Let players break blocks in the wild.
       build: false #Let players build blocks in the wild, building your islands could destroy builds if true.
       ignite: true #Lets' player start fires.
-      creepers: true #false equals no explosions in wild, true they will explode in wild.
+      creepers: true #false equals no explosions in the wild, true they will explode in the wild.
                       #includes: creeper, Wither skulls, fireballs, Lighting
     islands:
       not_owned:
@@ -14,10 +14,11 @@ settings:
         break: true #Let players break blocks on islands with no owners.
         build: true #Let players build blocks on islands with no owners.
         ignite: false #Lets' player start fires.
-        creepers: false #false equals no explosions on islands with no owners, true they will explode on islands with no owners.
+        creepers: false #false equals no explosions on islands with no owners,
+                        #true they will explode on islands with no owners.
                         #includes: creeper, Wither skulls, fireballs, Lighting
       owned:
-        creepers: false #false equals no explosions on islands with owner, true they will explode on islands with owner.
+        creepers: false #false equals no explosions on islands with an owner, true they will explode on islands with an owner.
                         #includes: creeper, Wither skulls, fireballs, Lighting
   environment:
     default:

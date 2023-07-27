@@ -5,7 +5,6 @@ import com.firesoftitan.play.titanbox.islands.enums.ProtectionEnum;
 import com.firesoftitan.play.titanbox.islands.managers.CubeManager;
 import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.EntityType;
@@ -55,7 +54,6 @@ public class ProtectionListener  implements Listener {
     public void onPlayerInteractEvent(PlayerInteractEvent event) {
         Block clickedBlock = event.getClickedBlock();
         ItemStack itemStack = event.getItem();
-        if (itemStack == null) itemStack = new ItemStack(Material.AIR);
         if (clickedBlock == null) return;
         if (!canAccess(event.getPlayer(), clickedBlock, ProtectionEnum.USE))
         {

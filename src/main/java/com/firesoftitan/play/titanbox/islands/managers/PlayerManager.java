@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-import static com.firesoftitan.play.titanbox.islands.TitanIslands.playerManager;
 
 public class PlayerManager {
     private final SaveManager playerData = new SaveManager(TitanIslands.instance.getName(), "player_data");

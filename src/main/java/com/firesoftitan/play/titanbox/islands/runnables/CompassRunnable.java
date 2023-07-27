@@ -75,7 +75,7 @@ public class CompassRunnable extends BukkitRunnable {
     }
     @Override
     public void run() {
-        if (managersToTick.size() == 0)
+        if (managersToTick.isEmpty())
         {
             managersToTick.addAll(compassManagers.values());
             return;

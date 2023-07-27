@@ -2,7 +2,6 @@ package com.firesoftitan.play.titanbox.islands.listeners;
 
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
 import com.firesoftitan.play.titanbox.islands.guis.CompassGui;
-import com.firesoftitan.play.titanbox.islands.managers.CubeManager;
 import com.firesoftitan.play.titanbox.islands.managers.IslandManager;
 import com.firesoftitan.play.titanbox.islands.managers.LangManager;
 import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
@@ -43,36 +42,36 @@ public class CompassGUIListener  implements Listener
                         if (TitanIslands.tools.getNBTTool().containsKey(clicked, "buttonaction")) {
                             String action = TitanIslands.tools.getNBTTool().getString(clicked, "buttonaction");
                             if (action != null && action.length() > 1) {
-                                Location compassTargert = null;
+                                Location compassTarget = null;
                                 switch (action.toLowerCase()) {
                                     case "none" -> {
                                         CompassRunnable.instance.remove(player);
                                         return;
                                     }
-                                    case "home" -> compassTargert = PlayerManager.instants.getHome(player);
+                                    case "home" -> compassTarget = PlayerManager.instants.getHome(player);
                                     case "closest" -> {
                                         IslandManager closestExcluding = IslandManager.getClosestExcluding(player.getLocation(), player);
                                         if (closestExcluding != null) {
-                                            compassTargert = closestExcluding.getLocation();
+                                            compassTarget = closestExcluding.getLocation();
                                         }
                                     }
                                     case "newest" -> {
                                         IslandManager earliest = IslandManager.getNewest(player.getLocation());
                                         if (earliest != null) {
-                                            compassTargert = earliest.getLocation();
+                                            compassTarget = earliest.getLocation();
                                         }
                                     }
                                     case "random" -> {
                                         IslandManager randomExcluding = IslandManager.getRandomExcluding(player);
                                         if (randomExcluding != null) {
-                                            compassTargert = randomExcluding.getLocation();
+                                            compassTarget = randomExcluding.getLocation();
                                         }
                                     }
                                 }
-                                if (compassTargert != null)
+                                if (compassTarget != null)
                                 {
                                     if (!CompassRunnable.instance.hasCompass(player)) CompassRunnable.instance.add(player, PlayerManager.instants.getHome(player));
-                                    CompassRunnable.instance.changeLocation(player, compassTargert);
+                                    CompassRunnable.instance.changeLocation(player, compassTarget);
                                     player.sendMessage(LangManager.instants.getMessage("done"));
                                     player.closeInventory();
                                 }

@@ -99,6 +99,8 @@ public class TitanIslands extends JavaPlugin {
                     getLogger().warning(LangManager.instants.getMessage("error.default_file") + fileName);
                 }
             } catch (IOException e) {
+                getLogger().severe("Error saving " + fileName +" to "+ file.getPath());
+                getLogger().severe(e.getMessage());
                 e.printStackTrace();
             }
         }

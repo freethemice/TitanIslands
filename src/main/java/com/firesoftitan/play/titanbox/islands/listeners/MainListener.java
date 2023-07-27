@@ -8,7 +8,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,7 +21,6 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -58,7 +56,7 @@ public class MainListener implements Listener {
         Player player = event.getPlayer();
         Location last = playerMove.get(player.getUniqueId());
         Location location = player.getLocation().clone();
-        // Location you want to point to
+        // The Location you want to point to
 
 
         //arrow.setRotation(yaw, pitch);
@@ -67,7 +65,7 @@ public class MainListener implements Listener {
             playerMove.put(player.getUniqueId(), location);
             last = location;
         }
-        // Check if player has moved at least 7 blocks from previous location
+        // Check if the player has moved at least 7 blocks from the previous location
         if (last.distance(player.getLocation()) > MoveThresholdEnum.BLOCKS_7.getDistance()) {
             playerMove.put(player.getUniqueId(), location);
             // Run unlock logic asynchronously 1 sec after player moves
@@ -132,11 +130,10 @@ public class MainListener implements Listener {
             }
             y = 150;
             Location location = new Location(world, x, y, z);
-            Location finalLocation = location;
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    Location location2 = new Location(world, finalLocation.getBlockX(), world.getHighestBlockYAt(finalLocation) + 2, finalLocation.getBlockZ());
+                    Location location2 = new Location(world, location.getBlockX(), world.getHighestBlockYAt(location) + 2, location.getBlockZ());
                     playerManager.setHome(player, location2.clone());
 
                     player.teleport(location2.clone());
