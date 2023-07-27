@@ -184,7 +184,7 @@ public class IslandManager {
         return "oak";
     }
     // Helper method to get a random word from a list based on spawn odds and height
-    private static String getRandomWordFromList(List<String> words, double randomValue, IslandGeneratorInfo info) {
+    private static String getRandomWordFromList(List<String> words, double heightMapKey, IslandGeneratorInfo info) {
         List<String> validWords = new ArrayList<>();
         String defaultWord = null;
         double defaultOdds = 0;
@@ -196,7 +196,7 @@ public class IslandManager {
                 defaultWord = word;
                 defaultOdds = spawnOddsValue;
             }
-            if ((structure.getType() == StructureTypeEnum.SHORE || randomValue < height) && Math.random() < spawnOddsValue / 100.0) {
+            if (Math.random() < spawnOddsValue / 100.0) {
                 if (structure.getType() == StructureTypeEnum.MINERAL
                         || structure.getType() == StructureTypeEnum.BUILDING
                         || structure.getType() == StructureTypeEnum.ANIMAL) {
@@ -215,7 +215,6 @@ public class IslandManager {
         }
         return defaultWord;
     }
-
     // Helper method to check if a word touches the shore (checks 8 neighboring positions)
     private static boolean touchesShore(IslandGeneratorInfo info) {
 

@@ -137,6 +137,10 @@ public class ProtectionListener  implements Listener {
                 event.setCancelled(true);
                 return;
             }
+            if (cubeA == null && configManager.isProtection_wild_creepers())
+            {
+                return;
+            }
             UUID owner = PlayerManager.instants.getOwner(cubeA);
             if (owner == null && !configManager.isProtection_not_owned_creepers()) {
                 event.setCancelled(true);

@@ -29,7 +29,9 @@ public class IslandMakerRunnable extends BukkitRunnable {
     @Override
     public void run() {
         String iKey = island[row][col];
+
         Location updatedLocation = location.clone().add(col*width, 0, row*height);
+
         Location check = CubeManager.adjustLocation(iKey, updatedLocation);
         StructureManager structure = StructureManager.getStructure(iKey);
         CubeManager build = structure.build(check);

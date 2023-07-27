@@ -2,7 +2,7 @@ title: Pig # the name player will see this, space are allowed.
 sealevel: 5 # blocks from the lowest point to the surface/sea level.
 version: 1.0.0 # Don't change this, is for auto updating
 autoupdate: true # if a newer version of this structure is released update it to the newer version
-heightmap: 0.9
+heightmap: 0.1 #0.9
 type: Animal
 odds: 10 # odds(percentage 0-100)  that this island will spawn randomly as players explore
 cost: 30 # levels of xp it takes for the player to build the island.

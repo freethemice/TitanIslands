@@ -245,6 +245,7 @@ public class StructureManager {
         Location finalLocation = StructureManager.getAdjustedPlacement(location, getName());
         return StructureManager.getPreBuild(finalLocation, this.nbtFile);
     }
+
     public CubeManager build(Location location)
     {
         Location finalLocation = StructureManager.getAdjustedPlacement(location, getName());
