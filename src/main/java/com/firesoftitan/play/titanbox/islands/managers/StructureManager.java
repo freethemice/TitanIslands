@@ -93,7 +93,7 @@ public class StructureManager {
         }
         return null;
     }
-    private static Location getAdjustedPlacement(Location location, String name)
+    private static Location getAdjustedPlacement(Location location, String name, int height)
     {
         StructureManager structure1 = StructureManager.getStructure(name);
         Structure structure = load(structure1.nbtFile);
@@ -103,8 +103,7 @@ public class StructureManager {
         CubeManager selectorTool = new CubeManager(location, location1);
         Location center = selectorTool.getCenterOffset();
         Location subtract = location.clone().subtract(center);
-        int highest = Objects.requireNonNull(location.getWorld()).getHighestBlockYAt(subtract);
-        subtract.setY(highest - structure1.getSeaLevelOffset() );
+        subtract.setY(height - structure1.getSeaLevelOffset() );
 
         return subtract.clone();
     }
@@ -240,15 +239,15 @@ public class StructureManager {
         }
 
     }
-    public CubeManager getPreBuild(Location location)
+    public CubeManager getPreBuild(Location location, int height)
     {
-        Location finalLocation = StructureManager.getAdjustedPlacement(location, getName());
+        Location finalLocation = StructureManager.getAdjustedPlacement(location, getName(), height);
         return StructureManager.getPreBuild(finalLocation, this.nbtFile);
     }
 
-    public CubeManager build(Location location)
+    public CubeManager build(Location location, int height)
     {
-        Location finalLocation = StructureManager.getAdjustedPlacement(location, getName());
+        Location finalLocation = StructureManager.getAdjustedPlacement(location, getName(), height);
         return StructureManager.build(finalLocation, this.nbtFile, StructureRotation.NONE);
     }
     public int getCost()

@@ -4,17 +4,11 @@ import com.firesoftitan.play.titanbox.islands.enums.MoveThresholdEnum;
 import com.firesoftitan.play.titanbox.islands.managers.*;
 import com.firesoftitan.play.titanbox.islands.runnables.CompassRunnable;
 import com.firesoftitan.play.titanbox.islands.runnables.IslandSpawnerRunnable;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Sound;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.plugin.PluginManager;
@@ -39,7 +33,6 @@ public class MainListener implements Listener {
     private final HashMap<UUID, Location> playerMove = new HashMap<UUID, Location>();
     private final HashMap<UUID, Long> playerSpawn = new HashMap<UUID, Long>();
 
-
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
 
@@ -48,6 +41,7 @@ public class MainListener implements Listener {
     public void onVehicleEnterEvent(VehicleEnterEvent event) {
 
     }
+
     @EventHandler
     public void onVehicleExitEvent(VehicleExitEvent event) {
 
@@ -76,7 +70,7 @@ public class MainListener implements Listener {
                     String name = cube.getName();
                     boolean unlocked = playerManager.isUnlocked(player, name);
                     StructureManager structure = StructureManager.getStructure(name);
-                    if (!unlocked) {
+                    if (!unlocked && !name.equalsIgnoreCase("water")&& !name.equalsIgnoreCase("air")) {
                         playerManager.unlock(player, name);
                         messageTool.sendMessagePlayer(player, LangManager.instants.getMessage("unlocked") + structure.getTitle());
                         int personalLimit = structure.getPersonalLimit();
@@ -145,7 +139,10 @@ public class MainListener implements Listener {
                     }
                 }
             }.runTaskLater(instance, 10);
-            playerManager.unlock(player,"empty");
+            String emptyType = "empty";
+            if (ConfigManager.getInstants().getType().equalsIgnoreCase("air")) emptyType = "empty_air";
+            StructureManager structure = StructureManager.getStructure(emptyType);
+            playerManager.unlock(player,emptyType);
             IslandManager.generateIsland(player, location);
 
         }

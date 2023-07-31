@@ -6,12 +6,21 @@ import com.firesoftitan.play.titanbox.islands.runnables.IslandMakerRunnable;
 import com.firesoftitan.play.titanbox.islands.tools.IslandGeneratorInfo;
 import com.firesoftitan.play.titanbox.libs.managers.SaveManager;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.*;
 
 public class IslandManager {
     private static final Map<UUID, IslandManager> islands = new HashMap<UUID, IslandManager>();
+
+    public static void removeIsland(IslandManager islandManager)
+    {
+        islands.remove(islandManager.getId());
+        islandSaves.delete(islandManager.getId().toString());
+    }
+
     public static IslandManager getIsland(UUID uuid)
     {
         return islands.get(uuid);
@@ -373,16 +382,50 @@ public class IslandManager {
         }
         return cubes.stream().min(Comparator.comparingDouble(island -> island.getLocation().distance(location))).orElse(null);
     }
-    public static IslandManager getNewest(Location location) {
+    public static IslandManager getNewest() {
+        return getNewest(false);
+    }
+    public static IslandManager getNewest(boolean UnownedOnly) {
 
-        List<IslandManager> island = new ArrayList<>(IslandManager.islands.values());
-        return island.stream()
+        List<IslandManager> islands = new ArrayList<>();
+        if (UnownedOnly) {
+            for (IslandManager island : IslandManager.islands.values()) {
+                if (island.getOwner() == null) {
+                    islands.add(island);
+                }
+            }
+        }
+        else {
+            islands = new ArrayList<>(IslandManager.islands.values());
+        }
+        return islands.stream()
                 .min(Comparator.comparingLong(islandM -> Math.abs(islandM.getCreatedTime() - System.currentTimeMillis())))
                 .orElse(null);
 
     }
+    public static IslandManager getOldest()
+    {
+        return getOldest(false);
+    }
 
+    public static IslandManager getOldest(boolean UnownedOnly) {
 
+        List<IslandManager> islands = new ArrayList<>();
+        if (UnownedOnly) {
+            for (IslandManager island : IslandManager.islands.values()) {
+                if (island.getOwner() == null) {
+                    islands.add(island);
+                }
+            }
+        }
+        else {
+            islands = new ArrayList<>(IslandManager.islands.values());
+        }
+        return islands.stream()
+                .max(Comparator.comparingLong(islandM -> Math.abs(islandM.getCreatedTime() - System.currentTimeMillis())))
+                .orElse(null);
+
+    }
 
     private static final SaveManager islandSaves = new SaveManager(TitanIslands.instance.getName(), "islands");
     public static void loadAll()
@@ -395,6 +438,7 @@ public class IslandManager {
     }
     public static void saveAll()
     {
+
         for (IslandManager islandManager : islands.values())
         {
             SaveManager save = islandManager.save();
@@ -402,23 +446,63 @@ public class IslandManager {
         }
         islandSaves.save();
     }
-
     private final UUID id;
     private Location location;
     private final Long created_time;
     private final Map<UUID, CubeManager> cubes = new HashMap<UUID, CubeManager>();
     private final List<UUID> friends;
+    private final int height;
     public IslandManager() {
-        id = generateID();
-        created_time = System.currentTimeMillis();
-        IslandManager.islands.put(id, this);
-        friends = new ArrayList<UUID>();
+
+        this.id = generateID();
+        this.created_time = System.currentTimeMillis();
+        IslandManager.islands.put(this.id, this);
+        this.friends = new ArrayList<UUID>();
+        this.height = getPlacementHeight();
+    }
+
+    private static int getPlacementHeight() {
+        Random random = new Random(System.currentTimeMillis());
+        int placement = ConfigManager.getInstants().getPlacement();
+
+        if (placement == -1) {
+            World world = Objects.requireNonNull(ConfigManager.getInstants().getWorld());
+
+            while (ConfigManager.getInstants().getPlacement() == -1) {
+
+                int x = random.nextInt(2000) - 1000;
+                int z = random.nextInt(2000) - 1000;
+
+                int h = world.getHighestBlockYAt(x, z);
+                Location randomLocation = world.getSpawnLocation().clone().add(x, 0, z);
+                randomLocation.setY(h);
+                if (world.getBlockAt(randomLocation).getType() == Material.WATER) {
+                    ConfigManager.getInstants().setPlacement(world.getHighestBlockYAt(randomLocation));
+                }
+                if (world.getBlockAt(randomLocation).getType() == Material.AIR)
+                {
+                    ConfigManager.getInstants().setPlacement(-2);
+                }
+            }
+        }
+
+        int height = ConfigManager.getInstants().getPlacement();
+
+        if (placement == -2) height = random.nextInt(201);
+        return height;
+    }
+    public UUID getOwner()
+    {
+        return PlayerManager.instants.getOwner(this);
     }
     public IslandManager(SaveManager saveManager) {
-        id = saveManager.getUUID("id");
-        created_time = saveManager.getLong("time");
-        friends = saveManager.getUUIDList("friends");
-        IslandManager.islands.put(id, this);
+        this.id = saveManager.getUUID("id");
+        this.created_time = saveManager.getLong("time");
+        this.friends = saveManager.getUUIDList("friends");
+        if (saveManager.contains("height")) this.height = saveManager.getInt("height");
+        else this.height = getPlacementHeight();
+
+        IslandManager.islands.put(this.id, this);
     }
     public SaveManager save()
     {
@@ -426,6 +510,7 @@ public class IslandManager {
         saveManager.set("id", this.id);
         saveManager.set("time", this.created_time);
         saveManager.set("friends", this.friends);
+        saveManager.set("height", this.height);
         return saveManager;
     }
 
@@ -452,7 +537,7 @@ public class IslandManager {
     public UUID getId() {
         return id;
     }
-    private long getCreatedTime() {
+    public long getCreatedTime() {
         return created_time;
     }
 
@@ -460,6 +545,19 @@ public class IslandManager {
     {
         if (cubes.isEmpty()) location = cubeManager.getCenter().clone();
         cubes.put(cubeManager.getId(), cubeManager);
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public List<CubeManager> getCubes()
+    {
+        return new ArrayList<CubeManager>(this.cubes.values());
+    }
+    public void removeCube(CubeManager cubeManager)
+    {
+        this.cubes.remove(cubeManager.getId());
     }
     public boolean hasCube(CubeManager cubeManager)
     {

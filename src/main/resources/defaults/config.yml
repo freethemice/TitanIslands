@@ -1,4 +1,11 @@
 settings:
+  server:
+    type: water #water for a world, air for sky blocks
+    placement: auto # Use "auto" for a water world. This will automatically set the y level to the current height or random if no ground is found.
+                    # Or, manually specify a number for the y level that islands should spawn at. This will be a fixed height.
+                    # Or, use "random" for randomly varying island heights.
+                    # If a large land area at spawn could cause the server to freeze, manually enter a y value for the water height or use "random."
+
   language: en_us # this is the language file used in the lang directory
   protection:
     wild:
@@ -29,7 +36,8 @@ settings:
       closest: 500 #This would find the minimum distance to an existing island, pick a random new location, and spawn a new island there.
                    #note: closest has to be equal to or greater that max.
     time: 1800 #how often an island will spawn in seconds
-    max: 45 #the max number of islands that can spawn around 1 player, -1 do disable this
+    decay: 10800 #how long an island will last before it's removed in seconds. -1 to disable.
+    max: 25 #the max number of islands that can spawn around 1 player, -1 do disable this
     major: 4 #the number of islands it takes before an island near spawn is created.
               #this will still work, even if no islands are spawning;
     announce: true #Announce the creation of the island and location to all players.

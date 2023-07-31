@@ -34,7 +34,7 @@ public class IslandMakerRunnable extends BukkitRunnable {
 
         Location check = CubeManager.adjustLocation(iKey, updatedLocation);
         StructureManager structure = StructureManager.getStructure(iKey);
-        CubeManager build = structure.build(check);
+        CubeManager build = structure.build(check, islandManager.getHeight());
         if (!CubeManager.isOverlapping(build)) {
             if (row == 0) width = build.getWidth();
             height = build.getDepth();

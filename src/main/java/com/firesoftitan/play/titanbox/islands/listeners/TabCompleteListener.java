@@ -5,6 +5,7 @@ import com.firesoftitan.play.titanbox.islands.managers.IslandManager;
 import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
 import com.firesoftitan.play.titanbox.islands.managers.StructureManager;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -15,14 +16,11 @@ import org.bukkit.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class TabCompleteListener implements TabCompleter {
-    private static final String[] ADMIN_COMMANDS = { "spawn", "build", "admin"};
-    private static final String[] NON_ADMIN_COMMANDS = {"home", "add", "sethome", "count", "info", "friends", "remove", "replace"};
+    private static final String[] ADMIN_COMMANDS = {"spawn", "build", "admin", "delete", "count"};
+    private static final String[] NON_ADMIN_COMMANDS = {"home", "add", "sethome", "total", "info", "friends", "remove", "replace", "claim", "abandon"};
     private final List<String> pluginNames = new ArrayList<String>();
     @Nullable
     @Override
@@ -36,6 +34,12 @@ public class TabCompleteListener implements TabCompleter {
 
         }
         if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("count"))
+            {
+                Commands.add("add");
+                Commands.add("remove");
+                Commands.add("get");
+            }
             if (args[0].equalsIgnoreCase("friends"))
             {
                 Commands.add("add");
@@ -64,24 +68,48 @@ public class TabCompleteListener implements TabCompleter {
         }
         if (args.length == 3)
         {
-            if (args[1].equalsIgnoreCase("add"))
-            {
-                return null;
-            }
-            if (args[1].equalsIgnoreCase("remove"))
-            {
-                Location home = PlayerManager.instants.getHome((Player) commandSender);
-                if (home != null) {
-                    IslandManager islandManager = IslandManager.getIsland(home);
-                    if (islandManager != null) {
-                        List<UUID> friends = islandManager.getFriends();
-                        List<String> names = new ArrayList<String>();
-                        for (UUID friend : friends) {
-                            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(friend);
-                            if (offlinePlayer != null) names.add(offlinePlayer.getName());
+            if (args[0].equalsIgnoreCase("friends")) {
+                if (args[1].equalsIgnoreCase("add")) {
+                    return null;
+                }
+                if (args[1].equalsIgnoreCase("remove")) {
+                    Location home = PlayerManager.instants.getHome((Player) commandSender);
+                    if (home != null) {
+                        IslandManager islandManager = IslandManager.getIsland(home);
+                        if (islandManager != null) {
+                            List<UUID> friends = islandManager.getFriends();
+                            List<String> names = new ArrayList<String>();
+                            for (UUID friend : friends) {
+                                OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(friend);
+                                if (offlinePlayer != null) names.add(offlinePlayer.getName());
+                            }
+                            return names;
                         }
-                        return names;
                     }
+                }
+            }
+            if (args[0].equalsIgnoreCase("count")) {
+                if (args[1].equalsIgnoreCase("set") || args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("remove") || args[1].equalsIgnoreCase("get")) {
+                    OfflinePlayer[] offlinePlayers = Bukkit.getOfflinePlayers();
+                    for (OfflinePlayer friend : offlinePlayers) {
+                        Commands.add(friend.getName());
+                    }
+                }
+            }
+        }
+        if (args.length == 4)
+        {
+            if (args[0].equalsIgnoreCase("count")) {
+                if (args[1].equalsIgnoreCase("set") || args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("remove") || args[1].equalsIgnoreCase("get")) {
+                    Commands.addAll(PlayerManager.instants.getCountList(((Player)commandSender)));
+                }
+            }
+        }
+        if (args.length == 5)
+        {
+            if (args[0].equalsIgnoreCase("count")) {
+                if (args[1].equalsIgnoreCase("set") || args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("remove")) {
+                    Commands.add("#");
                 }
             }
         }
@@ -91,6 +119,7 @@ public class TabCompleteListener implements TabCompleter {
         StringUtil.copyPartialMatches(args[args.length - 1], Commands, completions);
         //sort the list
         Collections.sort(completions);
+
 
         return completions;
 

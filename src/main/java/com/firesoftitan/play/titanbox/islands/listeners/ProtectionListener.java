@@ -39,6 +39,7 @@ public class ProtectionListener  implements Listener {
     }
     @EventHandler(priority = EventPriority.LOWEST)  
     public void onBlockBreakEvent(BlockBreakEvent event) {
+        //System.out.println("BREAK: " + canAccess(event.getPlayer(), event.getBlock(), ProtectionEnum.BREAK));
         if (!canAccess(event.getPlayer(), event.getBlock(),ProtectionEnum.BREAK))
         {
             event.setCancelled(true);
@@ -47,6 +48,7 @@ public class ProtectionListener  implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)  
     public void onBlockPlaceEvent(BlockPlaceEvent event) {
+        //System.out.println("BUILD: " + canAccess(event.getPlayer(), event.getBlock(), ProtectionEnum.BUILD));
         if (!canAccess(event.getPlayer(), event.getBlock(), ProtectionEnum.BUILD))
         {
             event.setCancelled(true);
@@ -58,6 +60,7 @@ public class ProtectionListener  implements Listener {
         Block clickedBlock = event.getClickedBlock();
         ItemStack itemStack = event.getItem();
         if (clickedBlock == null) return;
+        //System.out.println("Interact: " + canAccess(event.getPlayer(), clickedBlock, ProtectionEnum.USE));
         if (!canAccess(event.getPlayer(), clickedBlock, ProtectionEnum.USE))
         {
             event.setCancelled(true);
@@ -68,6 +71,7 @@ public class ProtectionListener  implements Listener {
     public void onBlockIgniteEvent(BlockIgniteEvent event) {
         if (event.getIgnitingBlock() == null) return;
         if (event.getPlayer() == null) return;
+        //System.out.println("IGNITE: " + canAccess(event.getPlayer(), event.getIgnitingBlock(), ProtectionEnum.IGNITE));
         if (!canAccess(event.getPlayer(), event.getIgnitingBlock(), ProtectionEnum.IGNITE))
         {
             event.setCancelled(true);
@@ -157,9 +161,17 @@ public class ProtectionListener  implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)  
     public void onEntityChangeBlockEvent(EntityChangeBlockEvent event) {
-        if (isProtected(event.getBlock()))
+        if (event.getEntity() != null && event.getEntity().getType() == EntityType.PLAYER)
         {
-            event.setCancelled(true);
+            if (!canAccess((Player) event.getEntity(), event.getBlock(), ProtectionEnum.USE))
+            {
+                event.setCancelled(true);
+            }
+        }
+        else {
+            if (isProtected(event.getBlock())) {
+                event.setCancelled(true);
+            }
         }
     }
 

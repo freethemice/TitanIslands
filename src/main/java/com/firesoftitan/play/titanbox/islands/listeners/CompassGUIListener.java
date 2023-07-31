@@ -56,7 +56,7 @@ public class CompassGUIListener  implements Listener
                                         }
                                     }
                                     case "newest" -> {
-                                        IslandManager earliest = IslandManager.getNewest(player.getLocation());
+                                        IslandManager earliest = IslandManager.getNewest();
                                         if (earliest != null) {
                                             compassTarget = earliest.getLocation();
                                         }

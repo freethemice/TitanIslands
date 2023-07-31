@@ -13,12 +13,13 @@ public class ConfigManager {
     public static ConfigManager instants;
     private String language, world, default_structure;
     private List<String> starting;
+    private long decay;
     private int x,z;
     private boolean world_boarder, announce, protection_wild_creepers, protection_wild_break, protection_not_owned_creepers,
             protection_not_owned_break, protection_owned_creepers;
     private int distance_min, distance_max, time, count_min, count_max, closest;
-    private int size_col, size_row, max_islands, major;
-    private String default_starting_shore, default_starting_inland;
+    private int size_col, size_row, max_islands, major, placement;
+    private String default_starting_shore, default_starting_inland, type;
     private boolean protection_wild_build;
     private boolean protection_not_owned_build;
     private boolean protection_wild_use;
@@ -35,7 +36,11 @@ public class ConfigManager {
     {
         SettingsManager configFile = new SettingsManager(TitanIslands.instance.getName(), "config");
 
-
+        if (!configFile.contains("settings.server"))
+        {
+            configFile.set("settings.server.type", "water");
+            configFile.set("settings.server.placement", "auto");
+        }
         if (!configFile.contains("settings.language"))
         {
             configFile.set("settings.language", "en_us");
@@ -71,6 +76,7 @@ public class ConfigManager {
             configFile.set("settings.environment.distance.max", 500);
             configFile.set("settings.environment.distance.closest", 500);
             configFile.set("settings.environment.time", 1800);
+            configFile.set("settings.environment.decay", 10800);
             configFile.set("settings.environment.max", 25);
             configFile.set("settings.environment.major", 4);
             configFile.set("settings.environment.count.min", 1);
@@ -91,6 +97,18 @@ public class ConfigManager {
             configFile.set("settings.protection.islands.not_owned.creepers", false);
             configFile.set("settings.protection.islands.owned.creepers", true);
         }
+
+        try {
+            String test = configFile.getString("settings.server.placement");
+            if (test.equalsIgnoreCase("auto")) this.placement = -1;
+            else if (test.equalsIgnoreCase("random")) this.placement = -2;
+            else this.placement = Integer.parseInt(test);
+        } catch (NumberFormatException ignore) {
+            this.placement = -1;
+            configFile.set("settings.server.placement", "auto");
+        }
+
+        this.type = configFile.getString("settings.server.type");
         this.closest = configFile.getInt("settings.environment.distance.closest");
         this.distance_min = configFile.getInt("settings.environment.distance.min");
         this.distance_max = configFile.getInt("settings.environment.distance.max");
@@ -113,6 +131,7 @@ public class ConfigManager {
         this.protection_owned_creepers = configFile.getBoolean("settings.protection.islands.owned.creepers");
         this.default_structure = configFile.getString("settings.environment.default.structure");
         this.time = configFile.getInt("settings.environment.time");
+        this.decay = configFile.getLong("settings.environment.decay");
         this.announce = configFile.getBoolean("settings.environment.announce");
         this.max_islands = configFile.getInt("settings.environment.max");
         this.major = configFile.getInt("settings.environment.major");
@@ -132,8 +151,29 @@ public class ConfigManager {
 
     }
 
+    public void setPlacement(int placement) {
+        this.placement = placement;
+        SettingsManager configFile = new SettingsManager(TitanIslands.instance.getName(), "config");
+        if (placement > -1) configFile.set("settings.server.placement", this.placement);
+        if (placement == -1) configFile.set("settings.server.placement", "auto");
+        if (placement == -2) configFile.set("settings.server.placement", "random");
+        configFile.save();
+    }
+
+    public long getDecay() {
+        return decay;
+    }
+
     public int getMajor() {
         return major;
+    }
+
+    public int getPlacement() {
+        return placement;
+    }
+
+    public String getType() {
+        return type;
     }
 
     public static ConfigManager getInstants() {

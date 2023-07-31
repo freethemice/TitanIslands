@@ -6,10 +6,13 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 
 public class CubeManager {
+
+    private static final SaveManager cubesSaves = new SaveManager(TitanIslands.instance.getName(), "cubes");
     private static final HashMap<UUID, CubeManager> cubes = new HashMap<UUID, CubeManager>();
     private static final int MAX_CHECK_OFFSET = 250;
     private static final int[] X_OFFSETS = {1, -1};
@@ -37,6 +40,29 @@ public class CubeManager {
         else if (zOffset == 1) blockFace = BlockFace.SOUTH;
         return adjustLocation(structureKey, locationToCheck, blockFace);
     }
+
+    public static void deleteCube(Location location)
+    {
+        if (!Objects.requireNonNull(location.getWorld()).getName().equals(ConfigManager.getInstants().getWorld().getName()))
+        {
+            return;
+        }
+        CubeManager cubeManager = CubeManager.getCube(location);
+        if (cubeManager == null) {
+            return;
+        }
+        UUID owner = PlayerManager.instants.getOwner(cubeManager);
+        Location firstCorner = cubeManager.getCenter();
+        String emptyType = "water";
+        if (ConfigManager.getInstants().getType().equalsIgnoreCase("air")) emptyType = "air";
+        StructureManager structure = StructureManager.getStructure(emptyType);
+        CubeManager build = structure.build(firstCorner.clone(), cubeManager.getIsland().getHeight());
+
+        cubes.remove(cubeManager.getId());
+        cubesSaves.delete(cubeManager.getId().toString());
+        cubeManager.getIsland().removeCube(cubeManager);
+
+    }
     /**
      * Checks if the given location overlaps with the structure for the given key.
      * If it overlaps, it finds the first valid non-overlapping location within
@@ -57,7 +83,7 @@ public class CubeManager {
         if (structure == null) return null;
         for (int i = 0; i < MAX_CHECK_OFFSET; i++) {
             Location newLocation = locationToCheck.clone().add(i*xOffset, 0, i*zOffset);
-            CubeManager build = structure.getPreBuild(newLocation);
+            CubeManager build = structure.getPreBuild(newLocation, 0);
             if (!CubeManager.isOverlapping(build)) {
                 return newLocation;
             }
@@ -176,7 +202,6 @@ public class CubeManager {
     private static boolean between(int val, int start, int end) {
         return val >= start && val < end;
     }
-    private static final SaveManager cubesSaves = new SaveManager(TitanIslands.instance.getName(), "cubes");
     public static void loadAll()
     {
         for(String key: cubesSaves.getKeys())
@@ -222,6 +247,10 @@ public class CubeManager {
         this.islandManager.add(this);
     }
 
+    public UUID getOwner()
+    {
+        return PlayerManager.instants.getOwner(this);
+    }
     public UUID getId() {
         return id;
     }
@@ -264,6 +293,7 @@ public class CubeManager {
         this.name = name;
         CubeManager.placeCube(this);
         this.islandManager.add(this);
+
     }
     public Location getFirstCorner() {
         return firstCorner.clone();

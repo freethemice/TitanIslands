@@ -23,6 +23,14 @@ public class PlayerManager {
     {
         return playerData.contains(player.getUniqueId().toString());
     }
+    public void remove(Player player, IslandManager islandManager)
+    {
+        playerData.delete(player.getUniqueId() + ".islands." + islandManager.getId());
+    }
+    public void remove(Player player, CubeManager cubeManager)
+    {
+        playerData.delete(player.getUniqueId() + ".cubes." + cubeManager.getId());
+    }
     public void add(Player player, IslandManager islandManager)
     {
         playerData.set(player.getUniqueId() + ".islands." + islandManager.getId() + ".key", islandManager.getId());
@@ -39,16 +47,41 @@ public class PlayerManager {
         count++;
         playerData.set(player.getUniqueId() + ".counts." + cubeManager.getName(), count);
     }
+    public void setCount(Player player, String name, int amount)
+    {
+        setCount(player.getUniqueId(), name, amount);
+    }
+    public void setCount(UUID uuid, String name, int amount)
+    {
+        playerData.set(uuid + ".counts." + name, amount);
+    }
+
     public int getCount(Player player, CubeManager cubeManager)
     {
         return getCount(player, cubeManager.getName());
     }
+    public int getCount(UUID uuid, CubeManager cubeManager)
+    {
+        return getCount(uuid, cubeManager.getName());
+    }
     public int getCount(Player player, String name)
     {
+        return getCount(player.getUniqueId(), name);
+    }
+    public List<String> getCountList(Player player)
+    {
+        return getCountList(player.getUniqueId());
+    }
+    public List<String> getCountList(UUID uuid)
+    {
+        return new ArrayList<String>(playerData.getKeys(uuid + ".counts"));
+    }
+    public int getCount(UUID uuid, String name)
+    {
         int count = 0;
-        if (playerData.contains(player.getUniqueId() + ".counts." + name))
+        if (playerData.contains(uuid + ".counts." + name))
         {
-            count = playerData.getInt(player.getUniqueId() + ".counts." + name);
+            count = playerData.getInt(uuid + ".counts." + name);
         }
         return count;
     }
@@ -93,13 +126,13 @@ public class PlayerManager {
     }
     public boolean isOwnedByPlayer(Player player, IslandManager islandManager)
     {
-        System.out.println(player.getName() + ":" + islandManager.getId() + ":" + playerData.contains(player.getUniqueId() + ".islands." + islandManager.getId()));
         return playerData.contains(player.getUniqueId() + ".islands." + islandManager.getId());
     }
     public boolean isOwnedByPlayer(Player player, CubeManager cubeManager)
     {
         return playerData.contains(player.getUniqueId() + ".cubes." + cubeManager.getId());
     }
+
     public UUID getOwner(CubeManager cubeManager)
     {
         for (String key: playerData.getKeys()) {
@@ -110,13 +143,12 @@ public class PlayerManager {
         }
         return null;
     }
-    public Player getOwner(IslandManager islandManager)
+    public UUID getOwner(IslandManager islandManager)
     {
         for (String key: playerData.getKeys()) {
             if (playerData.contains(key + ".islands." + islandManager.getId()))
             {
-                UUID uuid = UUID.fromString(key);
-                return Bukkit.getPlayer(uuid);
+                return UUID.fromString(key);
             }
         }
         return null;
