@@ -473,7 +473,47 @@ public class TitanIslands extends JavaPlugin {
                 if (isAdmin(sender)) {
                     if (args.length > 0) {
                         if (args[0].equalsIgnoreCase("unlock")) {
+                            String playerName = args[1];
+                            String name = args[2];
+                            //noinspection deprecation
+                            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
+                            StructureManager structure = StructureManager.getStructure(name);
+                            if (structure == null)
+                            {
+                                messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.no_structure"));
+                                return true;
+                            }
+                            //noinspection deprecation
+                            if (name == null || Bukkit.getOfflinePlayer(playerName) == null)
+                            {
+                                messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.player"));
+                                return true;
+                            }
+                            boolean unlocked = playerManager.isUnlocked(offlinePlayer.getUniqueId(), name);
+                            if (!unlocked && !name.equalsIgnoreCase("water")&& !name.equalsIgnoreCase("air")) {
+                                playerManager.unlock(offlinePlayer.getUniqueId(), name);
 
+                                if (offlinePlayer.isOnline()) {
+                                    Player player = offlinePlayer.getPlayer();
+                                    if (player != null) {
+                                        messageTool.sendMessagePlayer(player, LangManager.instants.getMessage("unlocked") + structure.getTitle());
+                                        int personalLimit = structure.getPersonalLimit();
+                                        String txtAmount = String.valueOf(personalLimit);
+                                        if (personalLimit == -1)
+                                            txtAmount = LangManager.instants.getMessage("unlimited");
+                                        if (personalLimit == 0) txtAmount = LangManager.instants.getMessage("none");
+                                        txtAmount = txtAmount + LangManager.instants.getMessage("these");
+                                        messageTool.sendMessagePlayer(player, LangManager.instants.getMessage("build") + txtAmount);
+                                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                                    }
+                                }
+                                messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("done"));
+                                return true;
+                            }
+                            else {
+                                messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.unlocked"));
+                                return true;
+                            }
                         }
                         if (args[0].equalsIgnoreCase("count")) {
                             String playerName = args[2];

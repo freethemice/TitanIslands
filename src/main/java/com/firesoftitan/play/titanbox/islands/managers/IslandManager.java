@@ -108,7 +108,7 @@ public class IslandManager {
         boolean structure = false;
         if (islandWidth > 4 && islandHeight > 4) inlandWords.addAll(StructureManager.getMineralStructures());
         if (islandWidth > 5 && islandHeight > 5) animals = true;
-        if (islandWidth > 6 && islandHeight > 6) structure = true;
+        if (islandWidth > 5 && islandHeight > 5) structure = true;
         String woodType = getWoodTypeKey();
         List<String> shoreWords = StructureManager.getShoreStructures();
 
@@ -125,8 +125,8 @@ public class IslandManager {
                 }
                 else {
                     List<String> correctedList = new ArrayList<String>(inlandWords);
-                    if (animals && random.nextInt(100) > 60) correctedList.addAll(StructureManager.getAnimalStructures());
-                    if (structure && random.nextInt(100) > 80) correctedList.addAll(StructureManager.getStructureStructures());
+                    if (animals && random.nextDouble() > 0.4D) correctedList.addAll(StructureManager.getAnimalStructures());
+                    if (structure && random.nextDouble() > 0.2D) correctedList.addAll(StructureManager.getStructureStructures());
                     selectedWord = getRandomWordFromList(correctedList, randomValue, info);
                 }
                 if (selectedWord != null) {
@@ -219,7 +219,10 @@ public class IslandManager {
 
         // Return a random word from the valid words list
         if (!validWords.isEmpty()) {
+            // Use heightMapKey to influence random selection
+            double weight = 1.0 - Math.abs(heightMapKey - 0.5) * 2;
             int randomIndex = new Random().nextInt(validWords.size());
+            randomIndex = (int)Math.floor(randomIndex * weight);
             return validWords.get(randomIndex);
         }
         return defaultWord;

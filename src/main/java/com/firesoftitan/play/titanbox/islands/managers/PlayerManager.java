@@ -2,7 +2,6 @@ package com.firesoftitan.play.titanbox.islands.managers;
 
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
 import com.firesoftitan.play.titanbox.libs.managers.SaveManager;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -87,16 +86,24 @@ public class PlayerManager {
     }
     public void unlock(Player player, String name)
     {
+        unlock(player.getUniqueId(), name);
+    }
+    public void unlock(UUID uuid, String name)
+    {
         name = name.toLowerCase();
-        List<String> stringList = playerData.getStringList(player.getUniqueId() + ".unlocked");
+        List<String> stringList = playerData.getStringList(uuid + ".unlocked");
         if (stringList == null) stringList = new ArrayList<String>();
         if (!stringList.contains(name)) stringList.add(name);
-        playerData.set(player.getUniqueId() + ".unlocked", stringList);
+        playerData.set(uuid + ".unlocked", stringList);
     }
     public boolean isUnlocked(Player player, String name)
     {
+        return isUnlocked(player.getUniqueId(), name);
+    }
+    public boolean isUnlocked(UUID uuid, String name)
+    {
         name = name.toLowerCase();
-        List<String> stringList = playerData.getStringList(player.getUniqueId() + ".unlocked");
+        List<String> stringList = playerData.getStringList(uuid + ".unlocked");
         if (stringList == null) stringList = new ArrayList<String>();
         return stringList.contains(name);
 

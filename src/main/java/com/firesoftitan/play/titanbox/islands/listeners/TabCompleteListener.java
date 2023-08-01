@@ -5,7 +5,6 @@ import com.firesoftitan.play.titanbox.islands.managers.IslandManager;
 import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
 import com.firesoftitan.play.titanbox.islands.managers.StructureManager;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -16,35 +15,45 @@ import org.bukkit.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 public class TabCompleteListener implements TabCompleter {
-    private static final String[] ADMIN_COMMANDS = {"spawn", "build", "admin", "delete", "count"};
+    private static final String[] ADMIN_COMMANDS = {"spawn", "build", "admin", "delete", "count", "unlock"};
     private static final String[] NON_ADMIN_COMMANDS = {"home", "add", "sethome", "total", "info", "friends", "remove", "replace", "claim", "abandon"};
     private final List<String> pluginNames = new ArrayList<String>();
     @Nullable
     @Override
     public List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
-        List<String> Commands = new ArrayList<String>();
+        List<String> commands = new ArrayList<String>();
         if (args.length == 1) {
             if (TitanIslands.isAdmin(commandSender)) {
-                Commands.addAll(List.of(ADMIN_COMMANDS));
+                commands.addAll(List.of(ADMIN_COMMANDS));
             }
-            Commands.addAll(List.of(NON_ADMIN_COMMANDS));
+            commands.addAll(List.of(NON_ADMIN_COMMANDS));
 
         }
         if (args.length == 2) {
             if (args[0].equalsIgnoreCase("count"))
             {
-                Commands.add("add");
-                Commands.add("remove");
-                Commands.add("get");
+                commands.add("add");
+                commands.add("remove");
+                commands.add("get");
             }
             if (args[0].equalsIgnoreCase("friends"))
             {
-                Commands.add("add");
-                Commands.add("remove");
-                Commands.add("list");
+                commands.add("add");
+                commands.add("remove");
+                commands.add("list");
+            }
+            if (args[0].equalsIgnoreCase("unlock"))
+            {
+                OfflinePlayer[] offlinePlayers = Bukkit.getOfflinePlayers();
+                for (OfflinePlayer friend : offlinePlayers) {
+                    commands.add(friend.getName());
+                }
             }
             if (args[0].equalsIgnoreCase("give"))
             {
@@ -53,21 +62,28 @@ public class TabCompleteListener implements TabCompleter {
             if (args[0].equalsIgnoreCase("replace"))
             {
                 List<String> unlocked = TitanIslands.playerManager.getUnlocked((Player) commandSender);
-                Commands.addAll(unlocked);
+                commands.addAll(unlocked);
             }
             if (args[0].equalsIgnoreCase("add"))
             {
                 List<String> unlocked = TitanIslands.playerManager.getUnlocked((Player) commandSender);
-                Commands.addAll(unlocked);
+                commands.addAll(unlocked);
             }
             if (args[0].equalsIgnoreCase("build"))
             {
                 List<String> unlocked = StructureManager.getStructures();
-                Commands.addAll(unlocked);
+                commands.addAll(unlocked);
             }
         }
         if (args.length == 3)
         {
+            if (args[0].equalsIgnoreCase("unlock"))
+            {
+                List<String> unlocked = StructureManager.getStructures();
+                List<String> countList = PlayerManager.instants.getCountList(((Player) commandSender));
+                unlocked.removeAll(countList);
+                commands.addAll(unlocked);
+            }
             if (args[0].equalsIgnoreCase("friends")) {
                 if (args[1].equalsIgnoreCase("add")) {
                     return null;
@@ -92,7 +108,7 @@ public class TabCompleteListener implements TabCompleter {
                 if (args[1].equalsIgnoreCase("set") || args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("remove") || args[1].equalsIgnoreCase("get")) {
                     OfflinePlayer[] offlinePlayers = Bukkit.getOfflinePlayers();
                     for (OfflinePlayer friend : offlinePlayers) {
-                        Commands.add(friend.getName());
+                        commands.add(friend.getName());
                     }
                 }
             }
@@ -101,7 +117,7 @@ public class TabCompleteListener implements TabCompleter {
         {
             if (args[0].equalsIgnoreCase("count")) {
                 if (args[1].equalsIgnoreCase("set") || args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("remove") || args[1].equalsIgnoreCase("get")) {
-                    Commands.addAll(PlayerManager.instants.getCountList(((Player)commandSender)));
+                    commands.addAll(PlayerManager.instants.getCountList(((Player)commandSender)));
                 }
             }
         }
@@ -109,14 +125,14 @@ public class TabCompleteListener implements TabCompleter {
         {
             if (args[0].equalsIgnoreCase("count")) {
                 if (args[1].equalsIgnoreCase("set") || args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("remove")) {
-                    Commands.add("#");
+                    commands.add("#");
                 }
             }
         }
         //create new array
         final List<String> completions = new ArrayList<>();
         //copy matches of first argument from list (ex: if first arg is 'm' will return just 'minecraft')
-        StringUtil.copyPartialMatches(args[args.length - 1], Commands, completions);
+        StringUtil.copyPartialMatches(args[args.length - 1], commands, completions);
         //sort the list
         Collections.sort(completions);
 
