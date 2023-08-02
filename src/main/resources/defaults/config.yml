@@ -46,8 +46,8 @@ settings:
       max: 10 #maximum number of structure files that will spawn together to form an island.
   starting: #Setting for player first joining the server
     default:
-      shore: titanislands:shore:sand # The shoreline structure for a new player's island
-      inland: titanislands:inland:grass # The inland structure for any extra space on a new player's island
+      shore: primary:shore:sand # The shoreline structure for a new player's island
+      inland: primary:inland:grass # The inland structure for any extra space on a new player's island
     size:
       col: 5 #the number of structures in the col multiplied by
       row: 5 #the number of structures in the row, equals the total number a player gets on his island

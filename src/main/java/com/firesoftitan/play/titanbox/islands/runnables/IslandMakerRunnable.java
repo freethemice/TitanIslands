@@ -1,7 +1,7 @@
 package com.firesoftitan.play.titanbox.islands.runnables;
 
 import com.firesoftitan.play.titanbox.islands.enums.StructureTypeEnum;
-import com.firesoftitan.play.titanbox.islands.managers.CubeManager;
+import com.firesoftitan.play.titanbox.islands.managers.FragmentManager;
 import com.firesoftitan.play.titanbox.islands.managers.IslandManager;
 import com.firesoftitan.play.titanbox.islands.managers.StructureManager;
 import org.bukkit.Location;
@@ -34,10 +34,10 @@ public class IslandMakerRunnable extends BukkitRunnable {
         Location updatedLocation = location.clone().add(col*width, 0, row*height);
         String[] split = iKey.split(":");
         StructureManager structure = StructureManager.getStructure(split[0], StructureTypeEnum.getType(split[1]), split[2]);
-        Location check = CubeManager.adjustLocation(structure, updatedLocation);
+        Location check = FragmentManager.adjustLocation(structure, updatedLocation);
 
-        CubeManager build = structure.build(check, islandManager.getHeight());
-        if (!CubeManager.isOverlapping(build)) {
+        FragmentManager build = structure.build(check, islandManager.getHeight());
+        if (!FragmentManager.isOverlapping(build)) {
             if (row == 0) width = build.getWidth();
             height = build.getDepth();
             build.place(islandManager, structure);

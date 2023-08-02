@@ -6,14 +6,16 @@ import com.firesoftitan.play.titanbox.libs.managers.SaveManager;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 import java.util.*;
 
-public class CubeManager {
+public class FragmentManager {
 
-    private static final SaveManager cubesSaves = new SaveManager(TitanIslands.instance.getName(), "cubes");
-    private static final HashMap<UUID, CubeManager> cubes = new HashMap<UUID, CubeManager>();
+    private static final SaveManager fragmentsSaves = new SaveManager(TitanIslands.instance.getName(), "fragments");
+    private static final HashMap<UUID, FragmentManager> fragments = new HashMap<UUID, FragmentManager>();
     private static final int MAX_CHECK_OFFSET = 250;
     private static final int[] X_OFFSETS = {1, -1};
     private static final int[] Z_OFFSETS = {1, -1};
@@ -32,27 +34,37 @@ public class CubeManager {
         return adjustLocation(structure, locationToCheck, blockFace);
     }
 
-    public static void deleteCube(Location location)
+    public static void deleteFragment(Location location)
     {
         if (!Objects.requireNonNull(location.getWorld()).getName().equals(ConfigManager.getInstants().getWorld().getName()))
         {
             return;
         }
-        CubeManager cubeManager = CubeManager.getCube(location);
-        if (cubeManager == null) {
+        FragmentManager fragmentManager = FragmentManager.getFragment(location);
+        if (fragmentManager == null) {
             return;
         }
-        UUID owner = PlayerManager.instants.getOwner(cubeManager);
-        Location firstCorner = cubeManager.getCenter();
+        UUID owner = PlayerManager.instants.getOwner(fragmentManager);
+        Location firstCorner = fragmentManager.getCenter();
         String emptyType = "water";
         if (ConfigManager.getInstants().getType().equalsIgnoreCase("air")) emptyType = "air";
         //noinspection SpellCheckingInspection
-        StructureManager structure = StructureManager.getStructure("titanislands", StructureTypeEnum.INLAND, emptyType);
-        CubeManager build = structure.build(firstCorner.clone(), cubeManager.getIsland().getHeight());
+        StructureManager structure = StructureManager.getStructure("primary", StructureTypeEnum.INLAND, emptyType);
+        FragmentManager build = structure.build(firstCorner.clone(), fragmentManager.getIsland().getHeight());
 
-        cubes.remove(cubeManager.getId());
-        cubesSaves.delete(cubeManager.getId().toString());
-        cubeManager.getIsland().removeCube(cubeManager);
+        fragments.remove(fragmentManager.getId());
+        fragmentsSaves.delete(fragmentManager.getId().toString());
+        fragmentManager.getIsland().removeFragment(fragmentManager);
+
+
+        double diagonal = Math.sqrt(fragmentManager.getWidth() * fragmentManager.getWidth() + fragmentManager.getDepth() * fragmentManager.getDepth());
+        diagonal = diagonal / 2;
+
+        List<Entity> entities = TitanIslands.tools.getEntityTool().findEntities(fragmentManager.getCenter(), (int) diagonal, "");
+        for (Entity e: entities)
+        {
+            if (e.getType() != EntityType.PLAYER) e.remove();
+        }
 
     }
 
@@ -64,120 +76,120 @@ public class CubeManager {
         if (structure == null) return null;
         for (int i = 0; i < MAX_CHECK_OFFSET; i++) {
             Location newLocation = locationToCheck.clone().add(i*xOffset, 0, i*zOffset);
-            CubeManager build = structure.getPreBuild(newLocation, 0);
-            if (!CubeManager.isOverlapping(build)) {
+            FragmentManager build = structure.getPreBuild(newLocation, 0);
+            if (!FragmentManager.isOverlapping(build)) {
                 return newLocation;
             }
             //useXOffset = !useXOffset;  // Alternate between x and z
         }
         return locationToCheck;
     }
-    public static void placeCube(CubeManager cubeManager)
+    public static void placeFragment(FragmentManager fragmentManager)
     {
-        cubes.put(cubeManager.getId(), cubeManager);
+        fragments.put(fragmentManager.getId(), fragmentManager);
     }
     /**
-     * Checks if two cubes represented by CubeSelectorManager objects intersect.
+     * Checks if two fragments represented by FragmentSelectorManager objects intersect.
      *
-     * @param cube1 The first cube to check
-     * @param cube2 The second cube to check
-     * @return True if the cubes intersect, false otherwise
+     * @param fragment1 The first fragment to check
+     * @param fragment2 The second fragment to check
+     * @return True if the fragments intersect, false otherwise
      */
-    public static boolean isInCube(CubeManager cube1, CubeManager cube2) {
-        // Get the coordinates of the two points defining the first cube
-        int x1 = cube1.getFirstCornerX();
-        int z1 = cube1.getFirstCornerZ();
-        int x2 = cube1.getSecondCornerX();
-        int z2 = cube1.getSecondCornerZ();
+    public static boolean isInFragment(FragmentManager fragment1, FragmentManager fragment2) {
+        // Get the coordinates of the two points defining the first Fragment
+        int x1 = fragment1.getFirstCornerX();
+        int z1 = fragment1.getFirstCornerZ();
+        int x2 = fragment1.getSecondCornerX();
+        int z2 = fragment1.getSecondCornerZ();
 
-        // Get the coordinates of the two points defining the second cube
-        int x3 = cube2.getFirstCornerX();
-        int z3 = cube2.getFirstCornerZ();
-        int x4 = cube2.getSecondCornerX();
-        int z4 = cube2.getSecondCornerZ();
-        // Check if the cubes intersect on the x-axis
+        // Get the coordinates of the two points defining the second Fragment
+        int x3 = fragment2.getFirstCornerX();
+        int z3 = fragment2.getFirstCornerZ();
+        int x4 = fragment2.getSecondCornerX();
+        int z4 = fragment2.getSecondCornerZ();
+        // Check if the fragments intersect on the x-axis
         boolean xOverlap = (x1 > x3 && x1 < x4) || (x2 > x3 && x2 < x4) ||
                 (x3 > x1 && x3 < x2) || (x4 > x1 && x4 < x2) || (x1 == x3 && x2 == x4);
 
-        // Check if the cubes intersect on the z-axis
+        // Check if the fragments intersect on the z-axis
         boolean zOverlap = (z1 > z3 && z1 < z4) || (z2 > z3 && z2 < z4) ||
                 (z3 > z1 && z3 < z2) || (z4 > z1 && z4 < z2) || (z1 == z3 && z2 == z4);
 
         // Return true if there is overlap on both the x and z axes
         return xOverlap && zOverlap;
     }
-    public static boolean isOverlapping(CubeManager cube1)
+    public static boolean isOverlapping(FragmentManager fragment1)
     {
-        List<CubeManager> cubes = new ArrayList<>(CubeManager.cubes.values());
-        return cubes.stream().anyMatch(cube -> isInCube(cube1, cube));
+        List<FragmentManager> fragments = new ArrayList<>(FragmentManager.fragments.values());
+        return fragments.stream().anyMatch(fragment -> isInFragment(fragment1, fragment));
     }
-    public static CubeManager getRandomExcluding(Player player)
+    public static FragmentManager getRandomExcluding(Player player)
     {
-        List<CubeManager> cubes = new ArrayList<>(CubeManager.cubes.values());
+        List<FragmentManager> fragments = new ArrayList<>(FragmentManager.fragments.values());
 
-        cubes.removeIf(selector -> PlayerManager.instants.isOwnedByPlayer(player, selector));
+        fragments.removeIf(selector -> PlayerManager.instants.isOwnedByPlayer(player, selector));
 
-        if(cubes.isEmpty()) return null;
+        if(fragments.isEmpty()) return null;
 
-        int randomIndex = random.nextInt(cubes.size());
+        int randomIndex = random.nextInt(fragments.size());
 
-        return cubes.get(randomIndex);
+        return fragments.get(randomIndex);
 
     }
-    public static CubeManager getClosestExcluding(Location location, Player player)
+    public static FragmentManager getClosestExcluding(Location location, Player player)
     {
-        List<CubeManager> cubes = new ArrayList<>(CubeManager.cubes.values());
-        cubes.removeIf(selector -> PlayerManager.instants.isOwnedByPlayer(player, selector));
-        if(cubes.isEmpty()) return null;
-        return cubes.stream().min(Comparator.comparingDouble(cube -> cube.getCenter().distance(location))).orElse(null);
+        List<FragmentManager> fragments = new ArrayList<>(FragmentManager.fragments.values());
+        fragments.removeIf(selector -> PlayerManager.instants.isOwnedByPlayer(player, selector));
+        if(fragments.isEmpty()) return null;
+        return fragments.stream().min(Comparator.comparingDouble(fragment -> fragment.getCenter().distance(location))).orElse(null);
     }
-    public static CubeManager getClosest(Location location)
+    public static FragmentManager getClosest(Location location)
     {
-        List<CubeManager> cubes = new ArrayList<>();
+        List<FragmentManager> fragments = new ArrayList<>();
 
-        for (CubeManager cube : CubeManager.cubes.values()) {
-            Location cubeCenter = cube.getCenter();
-            if (location.distance(cubeCenter) <= ConfigManager.instants.getDistance_max()) {
-                cubes.add(cube);
+        for (FragmentManager fragment : FragmentManager.fragments.values()) {
+            Location FragmentCenter = fragment.getCenter();
+            if (location.distance(FragmentCenter) <= ConfigManager.instants.getDistance_max()) {
+                fragments.add(fragment);
             }
         }
-        return cubes.stream().min(Comparator.comparingDouble(cube -> cube.getCenter().distance(location))).orElse(null);
+        return fragments.stream().min(Comparator.comparingDouble(fragment -> fragment.getCenter().distance(location))).orElse(null);
     }
-    public static CubeManager getNewest(Location location) {
+    public static FragmentManager getNewest(Location location) {
 
-        List<CubeManager> cubes = new ArrayList<>(CubeManager.cubes.values());
-        return cubes.stream()
-                .min(Comparator.comparingLong(cube -> Math.abs(cube.getCreatedTime() - System.currentTimeMillis())))
+        List<FragmentManager> fragments = new ArrayList<>(FragmentManager.fragments.values());
+        return fragments.stream()
+                .min(Comparator.comparingLong(fragment -> Math.abs(fragment.getCreatedTime() - System.currentTimeMillis())))
                 .orElse(null);
 
     }
-    public static CubeManager getOverlapping(CubeManager cube1)
+    public static FragmentManager getOverlapping(FragmentManager fragment1)
     {
-        List<CubeManager> cubes = new ArrayList<>(CubeManager.cubes.values());
-        return cubes.stream()
-                .filter(cube -> isInCube(cube1, cube))
+        List<FragmentManager> fragments = new ArrayList<>(FragmentManager.fragments.values());
+        return fragments.stream()
+                .filter(fragment -> isInFragment(fragment1, fragment))
                 .findFirst()
                 .orElse(null);
     }
-    public static CubeManager getCube(Location location)
+    public static FragmentManager getFragment(Location location)
     {
-        List<CubeManager> cubes = new ArrayList<>(CubeManager.cubes.values());
-        return cubes.stream()
-                .filter(cube -> isInCube(location, cube))
+        List<FragmentManager> fragments = new ArrayList<>(FragmentManager.fragments.values());
+        return fragments.stream()
+                .filter(fragment -> isInFragment(location, fragment))
                 .findFirst()
                 .orElse(null);
     }
     public static boolean isOverlapping(Location location)
     {
-        List<CubeManager> cubes = new ArrayList<>(CubeManager.cubes.values());
-        return cubes.stream().anyMatch(cube -> isInCube(location, cube));
+        List<FragmentManager> fragments = new ArrayList<>(FragmentManager.fragments.values());
+        return fragments.stream().anyMatch(fragment -> isInFragment(location, fragment));
     }
 
-    public static boolean isInCube(Location location, CubeManager cube) {
-        if (location == null || location.getWorld() == null || cube == null || cube.getWorld() == null) return false;
-        return location.getWorld().equals(cube.getWorld())
-                && between(location.getBlockX(), cube.getFirstCornerX(), cube.getSecondCornerX())
-                && between(location.getBlockZ(), cube.getFirstCornerZ(), cube.getSecondCornerZ());
+    public static boolean isInFragment(Location location, FragmentManager fragments) {
+        if (location == null || location.getWorld() == null || fragments == null || fragments.getWorld() == null) return false;
+        return location.getWorld().equals(fragments.getWorld())
+                && between(location.getBlockX(), fragments.getFirstCornerX(), fragments.getSecondCornerX())
+                && between(location.getBlockZ(), fragments.getFirstCornerZ(), fragments.getSecondCornerZ());
     }
 
     private static boolean between(int val, int start, int end) {
@@ -185,21 +197,21 @@ public class CubeManager {
     }
     public static void loadAll()
     {
-        for(String key: cubesSaves.getKeys())
+        for(String key: fragmentsSaves.getKeys())
         {
-            SaveManager saveManager = cubesSaves.getSaveManager(key);
-            CubeManager selectorTool = new CubeManager(saveManager);
+            SaveManager saveManager = fragmentsSaves.getSaveManager(key);
+            FragmentManager selectorTool = new FragmentManager(saveManager);
             selectorTool.place();
         }
     }
     public static void saveAll()
     {
-        for (CubeManager cubeManager : cubes.values())
+        for (FragmentManager fragmentManager : fragments.values())
         {
-            SaveManager save = cubeManager.save();
-            cubesSaves.set(cubeManager.getId().toString(), save);
+            SaveManager save = fragmentManager.save();
+            fragmentsSaves.set(fragmentManager.getId().toString(), save);
         }
-        cubesSaves.save();
+        fragmentsSaves.save();
     }
     private final Location firstCorner;
     private final Location secondCorner;
@@ -212,23 +224,15 @@ public class CubeManager {
     private final long createdTime;
 
     private IslandManager islandManager;
-    public CubeManager(Location firstCorner, Location secondCorner) {
+    public FragmentManager(Location firstCorner, Location secondCorner) {
         this.world = firstCorner.getWorld();
         this.firstCorner = firstCorner.clone();
         this.secondCorner = secondCorner.clone();
         this.createdTime = System.currentTimeMillis();
         this.id = this.generateID();
     }
-    public CubeManager(SaveManager saveManager)
+    public FragmentManager(SaveManager saveManager)
     {
-        //converts it from old naming, remove after updating server
-        if (!saveManager.contains("namespace") || !saveManager.contains("section") )
-        {
-            saveManager.set("namespace", "titanislands");
-            saveManager.set("type", StructureManager.oldNamingStructures.get(saveManager.getString("name")).getType().getName());
-        }
-        //converts it from old naming, remove after updating server
-
         this.firstCorner = saveManager.getLocation("first_corner");
         this.secondCorner = saveManager.getLocation("second_corner");
         this.name = saveManager.getString("name");
@@ -255,7 +259,7 @@ public class CubeManager {
     public UUID generateID()
     {
         UUID idtmp = UUID.randomUUID();
-        while (cubes.containsKey(idtmp))
+        while (fragments.containsKey(idtmp))
         {
             idtmp = UUID.randomUUID();
         }
@@ -292,7 +296,7 @@ public class CubeManager {
     }
     private void place()
     {
-        CubeManager.placeCube(this);
+        FragmentManager.placeFragment(this);
     }
     public void place(IslandManager islandManager, StructureManager structureManager)
     {
@@ -300,7 +304,7 @@ public class CubeManager {
         this.name = structureManager.getName();
         this.namespace = structureManager.getNamespace();
         this.section = structureManager.getType();
-        CubeManager.placeCube(this);
+        FragmentManager.placeFragment(this);
         this.islandManager.add(this);
     }
     public void place(IslandManager islandManager, String namespace, StructureTypeEnum section, String name)
@@ -309,7 +313,7 @@ public class CubeManager {
         this.name = name;
         this.namespace = namespace;
         this.section = section;
-        CubeManager.placeCube(this);
+        FragmentManager.placeFragment(this);
         this.islandManager.add(this);
 
     }

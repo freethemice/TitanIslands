@@ -66,11 +66,11 @@ public class MainListener implements Listener {
             playerMove.put(player.getUniqueId(), location);
             // Run unlock logic asynchronously 1 sec after player moves
             Bukkit.getScheduler().runTaskLater(instance, () -> {
-                CubeManager cube = CubeManager.getCube(player.getLocation());
-                if (cube != null) {
-                    StructureManager structure = StructureManager.getStructure(cube.getNamespace(), cube.getType(), cube.getName());
+                FragmentManager fragment = FragmentManager.getFragment(player.getLocation());
+                if (fragment != null) {
+                    StructureManager structure = StructureManager.getStructure(fragment.getNamespace(), fragment.getType(), fragment.getName());
                     if (structure != null) {
-                        String name = cube.getName();
+                        String name = fragment.getName();
                         boolean unlocked = playerManager.isUnlocked(player, structure);
                         if (!unlocked && !name.equalsIgnoreCase("water") && !name.equalsIgnoreCase("air")) {
                             playerManager.unlock(player, structure);
@@ -85,7 +85,7 @@ public class MainListener implements Listener {
                         }
                     }
                 }else {
-                    CubeManager closest = CubeManager.getClosest(location);
+                    FragmentManager closest = FragmentManager.getClosest(location);
                     if (closest != null)
                     {
                         double distance = closest.getCenter().distance(location);
@@ -144,7 +144,7 @@ public class MainListener implements Listener {
             }.runTaskLater(instance, 10);
             String emptyType = "empty";
             if (ConfigManager.getInstants().getType().equalsIgnoreCase("air")) emptyType = "empty_air";
-            StructureManager structure = StructureManager.getStructure("titanislands", StructureTypeEnum.INLAND, emptyType);
+            StructureManager structure = StructureManager.getStructure("primary", StructureTypeEnum.INLAND, emptyType);
             playerManager.unlock(player, structure);
             IslandManager.generateIsland(player, location);
 

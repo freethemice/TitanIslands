@@ -3,7 +3,7 @@ package com.firesoftitan.play.titanbox.islands.listeners;
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
 import com.firesoftitan.play.titanbox.islands.enums.ProtectionEnum;
 import com.firesoftitan.play.titanbox.islands.managers.ConfigManager;
-import com.firesoftitan.play.titanbox.islands.managers.CubeManager;
+import com.firesoftitan.play.titanbox.islands.managers.FragmentManager;
 import com.firesoftitan.play.titanbox.islands.managers.IslandManager;
 import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
 import org.bukkit.Location;
@@ -139,16 +139,16 @@ public class ProtectionListener  implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)  
     public void onEntityExplodeEvent(EntityExplodeEvent event) {
         if (event.getEntity().getType() == EntityType.CREEPER || event.getEntity().getType() == EntityType.WITHER_SKULL || event.getEntity().getType() == EntityType.FIREBALL || event.getEntity().getType() == EntityType.LIGHTNING) {
-            CubeManager cubeA = CubeManager.getCube(event.getLocation());
-            if (cubeA == null && !configManager.isProtection_wild_creepers()) {
+            FragmentManager fragmentA = FragmentManager.getFragment(event.getLocation());
+            if (fragmentA == null && !configManager.isProtection_wild_creepers()) {
                 event.setCancelled(true);
                 return;
             }
-            if (cubeA == null && configManager.isProtection_wild_creepers())
+            if (fragmentA == null && configManager.isProtection_wild_creepers())
             {
                 return;
             }
-            UUID owner = PlayerManager.instants.getOwner(cubeA);
+            UUID owner = PlayerManager.instants.getOwner(fragmentA);
             if (owner == null && !configManager.isProtection_not_owned_creepers()) {
                 event.setCancelled(true);
             } else {
@@ -184,13 +184,13 @@ public class ProtectionListener  implements Listener {
     {
         if (!Objects.requireNonNull(locationA.getWorld()).getName().equals(ConfigManager.getInstants().getWorld().getName())) return true;
         if (!Objects.requireNonNull(locationB.getWorld()).getName().equals(ConfigManager.getInstants().getWorld().getName())) return true;
-        CubeManager cubeA = CubeManager.getCube(locationA);
-        CubeManager cubeB = CubeManager.getCube(locationB);
-        if (cubeA == null && cubeB != null) return false;
-        if (cubeA != null && cubeB == null) return false;
-        if (cubeA == null && cubeB == null) return configManager.isProtection_wild_break();
-        UUID ownerA = PlayerManager.instants.getOwner(cubeA);
-        UUID ownerB = PlayerManager.instants.getOwner(cubeB);
+        FragmentManager fragmentA = FragmentManager.getFragment(locationA);
+        FragmentManager fragmentB = FragmentManager.getFragment(locationB);
+        if (fragmentA == null && fragmentB != null) return false;
+        if (fragmentA != null && fragmentB == null) return false;
+        if (fragmentA == null && fragmentB == null) return configManager.isProtection_wild_break();
+        UUID ownerA = PlayerManager.instants.getOwner(fragmentA);
+        UUID ownerB = PlayerManager.instants.getOwner(fragmentB);
         if (ownerA == null && ownerB == null) return true;
         if (ownerA == null || ownerB == null) return false;
         return ownerA.equals(ownerB);
@@ -198,9 +198,9 @@ public class ProtectionListener  implements Listener {
     private boolean isProtected(Location location)
     {
         if (!Objects.requireNonNull(location.getWorld()).getName().equals(ConfigManager.getInstants().getWorld().getName())) return false;
-        CubeManager cube = CubeManager.getCube(location);
-        if (cube == null) return configManager.isProtection_wild_break(); //stop player from building in the wild
-        UUID owner = PlayerManager.instants.getOwner(cube);
+        FragmentManager fragment = FragmentManager.getFragment(location);
+        if (fragment == null) return configManager.isProtection_wild_break(); //stop player from building in the wild
+        UUID owner = PlayerManager.instants.getOwner(fragment);
         if (owner == null) return configManager.isProtection_not_owned_break();
         return true;
     }
@@ -215,9 +215,9 @@ public class ProtectionListener  implements Listener {
         if (!Objects.requireNonNull(location.getWorld()).getName().equals(ConfigManager.getInstants().getWorld().getName())) return true;
         if (TitanIslands.getAdminMode(player)) return true;
 
-        CubeManager cube = CubeManager.getCube(location);
+        FragmentManager fragment = FragmentManager.getFragment(location);
 
-        if (cube == null) {
+        if (fragment == null) {
             if (action == ProtectionEnum.BREAK) {
                 return configManager.isProtection_wild_break();
             } else if (action == ProtectionEnum.USE) {
@@ -229,7 +229,7 @@ public class ProtectionListener  implements Listener {
             }
         }
 
-        UUID ownedByPlayer = PlayerManager.instants.getOwner(cube);
+        UUID ownedByPlayer = PlayerManager.instants.getOwner(fragment);
 
         if (ownedByPlayer == null) {
             if (action == ProtectionEnum.BREAK) {
@@ -246,8 +246,8 @@ public class ProtectionListener  implements Listener {
         boolean equals = player.getUniqueId().equals(ownedByPlayer);
         if (!equals)
         {
-            if (cube != null) {
-                IslandManager island = cube.getIsland();
+            if (fragment != null) {
+                IslandManager island = fragment.getIsland();
                 if (island != null) return island.isFriend(player);
             }
         }

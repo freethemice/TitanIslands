@@ -21,70 +21,29 @@ public class PlayerManager {
         return playerData.contains(player.getUniqueId().toString());
     }
 
-    @Deprecated
-    public void loadFixer()
-    {
-        Set<String> keys = playerData.getKeys();
-        for (String uuid: keys)
-        {
-            Set<String> keys1 = playerData.getKeys(uuid + ".counts");
-            for (String key: keys1)
-            {
-                if (!key.contains(":"))
-                {
-                    System.out.println("Count: " + key);
-                    StructureManager manager = StructureManager.oldNamingStructures.get(key);
-                    if (manager != null) {
-                        String name = manager.getType().getName();
-                        String path = uuid + ".counts.titanislands:" + name + ":" + key;
-                        int anInt = playerData.getInt(uuid + ".counts." + key);
-                        playerData.set(path, anInt);
-                    }
-                    playerData.delete(uuid + ".counts." + key);
-                }
-            }
-            List<String> unlocked = playerData.getStringList(uuid + ".unlocked");
-            List<String> updatedUnlocked = new ArrayList<String>();
-            System.out.println("Unlock: " + unlocked.size());
-            for (String key: unlocked) {
-                System.out.println("Unlock: " + key);
-                if (!key.contains(":")) {
-                    StructureManager manager = StructureManager.oldNamingStructures.get(key);
-                    String name = manager.getType().getName();
-                    updatedUnlocked.add("titanisland:" + name + ":" + key);
-                }
-                else
-                {
-                    updatedUnlocked.add(key);
-                }
-            }
-            playerData.set(uuid + ".unlocked", updatedUnlocked);
-        }
-    }
-
     public void remove(Player player, IslandManager islandManager)
     {
         playerData.delete(player.getUniqueId() + ".islands." + islandManager.getId());
     }
-    public void remove(Player player, CubeManager cubeManager)
+    public void remove(Player player, FragmentManager fragmentManager)
     {
-        playerData.delete(player.getUniqueId() + ".cubes." + cubeManager.getId());
+        playerData.delete(player.getUniqueId() + ".fragments." + fragmentManager.getId());
     }
     public void add(Player player, IslandManager islandManager)
     {
         playerData.set(player.getUniqueId() + ".islands." + islandManager.getId() + ".key", islandManager.getId());
 
     }
-    public void add(Player player, CubeManager cubeManager)
+    public void add(Player player, FragmentManager fragmentManager)
     {
-        playerData.set(player.getUniqueId() + ".cubes." + cubeManager.getId() + ".key", cubeManager.getId());
+        playerData.set(player.getUniqueId() + ".fragments." + fragmentManager.getId() + ".key", fragmentManager.getId());
         int count = 0;
-        if (playerData.contains(player.getUniqueId() + ".counts." + cubeManager.getNamespace()  + ":" +  cubeManager.getType().getName()  + ":" +  cubeManager.getName()))
+        if (playerData.contains(player.getUniqueId() + ".counts." + fragmentManager.getNamespace()  + ":" +  fragmentManager.getType().getName()  + ":" +  fragmentManager.getName()))
         {
-            count = playerData.getInt(player.getUniqueId() + ".counts." + cubeManager.getNamespace()  + ":" +  cubeManager.getType().getName()  + ":" +  cubeManager.getName());
+            count = playerData.getInt(player.getUniqueId() + ".counts." + fragmentManager.getNamespace()  + ":" +  fragmentManager.getType().getName()  + ":" +  fragmentManager.getName());
         }
         count++;
-        playerData.set(player.getUniqueId() + ".counts." + cubeManager.getNamespace()  + ":" +  cubeManager.getType().getName()  + ":" +  cubeManager.getName(), count);
+        playerData.set(player.getUniqueId() + ".counts." + fragmentManager.getNamespace()  + ":" +  fragmentManager.getType().getName()  + ":" +  fragmentManager.getName(), count);
     }
     public void setCount(Player player, StructureManager structureManager, int amount)
     {
@@ -95,13 +54,13 @@ public class PlayerManager {
         playerData.set(uuid + ".counts." + structureManager.getNamespace() + ":" + structureManager.getType().getName() + ":" + structureManager.getName(), amount);
     }
 
-    public int getCount(Player player, CubeManager cubeManager)
+    public int getCount(Player player, FragmentManager fragmentManager)
     {
-        return getCount(player.getUniqueId(), cubeManager);
+        return getCount(player.getUniqueId(), fragmentManager);
     }
-    public int getCount(UUID uuid, CubeManager cubeManager)
+    public int getCount(UUID uuid, FragmentManager fragmentManager)
     {
-        StructureManager structure = StructureManager.getStructure(cubeManager.getNamespace(), cubeManager.getType(), cubeManager.getName());
+        StructureManager structure = StructureManager.getStructure(fragmentManager.getNamespace(), fragmentManager.getType(), fragmentManager.getName());
         return getCount(uuid, structure);
     }
     public int getCount(Player player, StructureManager structureManager)
@@ -203,15 +162,15 @@ public class PlayerManager {
     {
         return playerData.contains(player.getUniqueId() + ".islands." + islandManager.getId());
     }
-    public boolean isOwnedByPlayer(Player player, CubeManager cubeManager)
+    public boolean isOwnedByPlayer(Player player, FragmentManager fragmentManager)
     {
-        return playerData.contains(player.getUniqueId() + ".cubes." + cubeManager.getId());
+        return playerData.contains(player.getUniqueId() + ".fragments." + fragmentManager.getId());
     }
 
-    public UUID getOwner(CubeManager cubeManager)
+    public UUID getOwner(FragmentManager fragmentManager)
     {
         for (String key: playerData.getKeys()) {
-            if (playerData.contains(key + ".cubes." + cubeManager.getId()))
+            if (playerData.contains(key + ".fragments." + fragmentManager.getId()))
             {
                 return UUID.fromString(key);
             }

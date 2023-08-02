@@ -101,48 +101,45 @@ public class StructureManager {
         assert structure != null;
         BlockVector size = structure.getSize();
         Location location1 = new Location(location.getWorld(), location.getBlockX() + size.getBlockX(), location.getBlockY() + size.getBlockY(), location.getBlockZ() + size.getBlockZ());
-        CubeManager selectorTool = new CubeManager(location, location1);
+        FragmentManager selectorTool = new FragmentManager(location, location1);
         Location center = selectorTool.getCenterOffset();
         Location subtract = location.clone().subtract(center);
         subtract.setY(height - structureManager.getSeaLevelOffset() );
 
         return subtract.clone();
     }
-    public static CubeManager getPreBuild(Location location, File section)
+    public static FragmentManager getPreBuild(Location location, File section)
     {
         Structure structure = load(section);
         assert structure != null;
         BlockVector size = structure.getSize();
         Location location1 = new Location(location.getWorld(), location.getBlockX() + size.getBlockX(), location.getBlockY() + size.getBlockY(), location.getBlockZ() + size.getBlockZ());
-        return new CubeManager(location, location1);
+        return new FragmentManager(location, location1);
     }
-    public static CubeManager build(Location location, File section, StructureRotation rotation)
+    public static FragmentManager build(Location location, File section, StructureRotation rotation)
     {
         return build(location, section, rotation, 1);
     }
-    private static CubeManager build(Location location, File section, StructureRotation rotation, float all)
+    private static FragmentManager build(Location location, File section, StructureRotation rotation, float all)
     {
         Structure structure = load(section);
         assert structure != null;
         return build(location,structure,rotation,all);
     }
-    private static CubeManager build(Location location, Structure structure, StructureRotation rotation)
+    private static FragmentManager build(Location location, Structure structure, StructureRotation rotation)
     {
         structure.place(location,true, rotation, Mirror.NONE, -1, 1, new Random());
         BlockVector size = structure.getSize();
         Location location1 = new Location(location.getWorld(), location.getBlockX() + size.getBlockX(), location.getBlockY() + size.getBlockY(), location.getBlockZ() + size.getBlockZ());
-        return new CubeManager(location, location1);
+        return new FragmentManager(location, location1);
     }
-    private static CubeManager build(Location location, Structure structure, StructureRotation rotation, float all)
+    private static FragmentManager build(Location location, Structure structure, StructureRotation rotation, float all)
     {
         structure.place(location,true, rotation, Mirror.NONE, -1, all, new Random());
         BlockVector size = structure.getSize();
         Location location1 = new Location(location.getWorld(), location.getBlockX() + size.getBlockX(), location.getBlockY() + size.getBlockY(), location.getBlockZ() + size.getBlockZ());
-        return new CubeManager(location, location1);
+        return new FragmentManager(location, location1);
     }
-
-    @Deprecated
-    public static final HashMap<String, StructureManager> oldNamingStructures = new HashMap<String, StructureManager>();
     private static final HashMap<String, StructureManager> allStructures = new HashMap<String, StructureManager>();
     private static final HashMap<String, StructureManager> shoreStructures = new HashMap<String, StructureManager>();
     private static final HashMap<String, StructureManager> inlandStructures = new HashMap<String, StructureManager>();
@@ -231,7 +228,6 @@ public class StructureManager {
         name = ymlName.toLowerCase().replace(" ", "");
         this.namespace = namespace;
         String key = namespace + ":" + section.getName() + ":" + this.getName();
-        oldNamingStructures.put(this.getName(), this);
         allStructures.put(key, this);
         if (!structureData.contains(key))
         {
@@ -248,7 +244,7 @@ public class StructureManager {
 
         configManager.save();
         InputStream stream = getClass().getResourceAsStream(jarYmlFile);
-        if (namespace.equalsIgnoreCase("titanislands") && stream != null)
+        if (namespace.equalsIgnoreCase("primary") && stream != null)
         {
             if (this.isAutoUpdate()) {
                 SettingsManager settingsManager = new SettingsManager(stream);
@@ -281,13 +277,13 @@ public class StructureManager {
     public String getNamespace() {
         return namespace;
     }
-    public CubeManager getPreBuild(Location location, int height)
+    public FragmentManager getPreBuild(Location location, int height)
     {
         Location finalLocation = StructureManager.getAdjustedPlacement(location, this, height);
         return StructureManager.getPreBuild(finalLocation, this.nbtFile);
     }
 
-    public CubeManager build(Location location, int height)
+    public FragmentManager build(Location location, int height)
     {
         Location finalLocation = StructureManager.getAdjustedPlacement(location, this, height);
         return StructureManager.build(finalLocation, this.nbtFile, StructureRotation.NONE);

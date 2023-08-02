@@ -20,34 +20,7 @@ public class IslandManager {
         islands.remove(islandManager.getId());
         islandSaves.delete(islandManager.getId().toString());
     }
-    private static void getIslandBounds()
-    {
-        List<IslandManager> islandManagers = new ArrayList<>(IslandManager.islands.values());
-        for (IslandManager islandManager : islandManagers) {
-            double minX = Double.MAX_VALUE;
-            double minY = Double.MAX_VALUE;
-            double minZ = Double.MAX_VALUE;
 
-            double maxX = -Double.MAX_VALUE;
-            double maxY = -Double.MAX_VALUE;
-            double maxZ = -Double.MAX_VALUE;
-
-            for (CubeManager cube : islandManager.getCubes()) {
-                Location minLoc = cube.getFirstCorner();
-                Location maxLoc = cube.getSecondCorner();
-
-                minX = Math.min(minX, minLoc.getX());
-                minY = Math.min(minY, minLoc.getY());
-                minZ = Math.min(minZ, minLoc.getZ());
-
-                maxX = Math.max(maxX, maxLoc.getX());
-                maxY = Math.max(maxY, maxLoc.getY());
-                maxZ = Math.max(maxZ, maxLoc.getZ());
-            }
-            Location firstCorner = new Location(islandManager.getLocation().getWorld(), minX, minY, minZ);
-            Location secondCorner = new Location(islandManager.getLocation().getWorld(), maxX, maxY, maxZ);
-        }
-    }
 
     public static Boolean isSafeSpawnLocation(Location location)
     {
@@ -73,11 +46,11 @@ public class IslandManager {
 
         return null;
     }
-    public static IslandManager getIsland(CubeManager cubeManager)
+    public static IslandManager getIsland(FragmentManager fragmentManager)
     {
         List<IslandManager> islandManagers = new ArrayList<>(IslandManager.islands.values());
         for (IslandManager islandManager : islandManagers) {
-            if (islandManager.hasCube(cubeManager)) {
+            if (islandManager.hasFragment(fragmentManager)) {
                 return islandManager;
             }
         }
@@ -417,29 +390,29 @@ public class IslandManager {
     }
     public static List<IslandManager> getSurrounding(Location location)
     {
-        List<IslandManager> cubes = new ArrayList<>();
+        List<IslandManager> fragments = new ArrayList<>();
 
         for (IslandManager island : IslandManager.islands.values()) {
-            Location cubeCenter = island.getLocation();
-            if (cubeCenter == null) continue;
-            if (location.distance(cubeCenter) <= ConfigManager.instants.getDistance_max()) {
-                cubes.add(island);
+            Location fragmentCenter = island.getLocation();
+            if (fragmentCenter == null) continue;
+            if (location.distance(fragmentCenter) <= ConfigManager.instants.getDistance_max()) {
+                fragments.add(island);
             }
         }
-        return cubes;
+        return fragments;
     }
     public static IslandManager getClosest(Location location)
     {
-        List<IslandManager> cubes = new ArrayList<>();
+        List<IslandManager> fragments = new ArrayList<>();
 
         for (IslandManager island : IslandManager.islands.values()) {
-            Location cubeCenter = island.getLocation();
-            if (cubeCenter == null) continue;
-            if (location.distance(cubeCenter) <= ConfigManager.instants.getDistance_max()) {
-                cubes.add(island);
+            Location fragmentCenter = island.getLocation();
+            if (fragmentCenter == null) continue;
+            if (location.distance(fragmentCenter) <= ConfigManager.instants.getDistance_max()) {
+                fragments.add(island);
             }
         }
-        return cubes.stream().min(Comparator.comparingDouble(island -> island.getLocation().distance(location))).orElse(null);
+        return fragments.stream().min(Comparator.comparingDouble(island -> island.getLocation().distance(location))).orElse(null);
     }
     public static IslandManager getNewest() {
         return getNewest(false);
@@ -485,41 +458,6 @@ public class IslandManager {
                 .orElse(null);
 
     }
-
-    private static final SaveManager islandSaves = new SaveManager(TitanIslands.instance.getName(), "islands");
-    public static void loadAll()
-    {
-        for(String key: islandSaves.getKeys())
-        {
-            SaveManager saveManager = islandSaves.getSaveManager(key);
-            IslandManager selectorTool = new IslandManager(saveManager);
-        }
-    }
-    public static void saveAll()
-    {
-
-        for (IslandManager islandManager : islands.values())
-        {
-            SaveManager save = islandManager.save();
-            islandSaves.set(islandManager.getId().toString(), save);
-        }
-        islandSaves.save();
-    }
-    private final UUID id;
-    private Location location;
-    private final Long created_time;
-    private final Map<UUID, CubeManager> cubes = new HashMap<UUID, CubeManager>();
-    private final List<UUID> friends;
-    private final int height;
-    public IslandManager() {
-
-        this.id = generateID();
-        this.created_time = System.currentTimeMillis();
-        IslandManager.islands.put(this.id, this);
-        this.friends = new ArrayList<UUID>();
-        this.height = getPlacementHeight();
-    }
-
     private static int getPlacementHeight() {
         Random random = new Random(System.currentTimeMillis());
         int placement = ConfigManager.getInstants().getPlacement();
@@ -550,6 +488,41 @@ public class IslandManager {
         if (placement == -2) height = random.nextInt(201);
         return height;
     }
+    private static final SaveManager islandSaves = new SaveManager(TitanIslands.instance.getName(), "islands");
+    public static void loadAll()
+    {
+        for(String key: islandSaves.getKeys())
+        {
+            SaveManager saveManager = islandSaves.getSaveManager(key);
+            IslandManager selectorTool = new IslandManager(saveManager);
+        }
+    }
+    public static void saveAll()
+    {
+
+        for (IslandManager islandManager : islands.values())
+        {
+            SaveManager save = islandManager.save();
+            islandSaves.set(islandManager.getId().toString(), save);
+        }
+        islandSaves.save();
+    }
+    private final UUID id;
+    private Location location;
+    private final Long created_time;
+    private final Map<UUID, FragmentManager> fragments = new HashMap<UUID, FragmentManager>();
+    private final List<UUID> friends;
+    private final int height;
+    public IslandManager() {
+
+        this.id = generateID();
+        this.created_time = System.currentTimeMillis();
+        IslandManager.islands.put(this.id, this);
+        this.friends = new ArrayList<UUID>();
+        this.height = getPlacementHeight();
+    }
+
+
     public UUID getOwner()
     {
         return PlayerManager.instants.getOwner(this);
@@ -572,7 +545,53 @@ public class IslandManager {
         saveManager.set("height", this.height);
         return saveManager;
     }
+    public Location getCenter()
+    {
+        Location[] islandBounds = getBounds();
+        double x1 = islandBounds[0].getX();
+        double y1 = islandBounds[0].getY();
+        double z1 = islandBounds[0].getZ();
 
+
+
+        double x2 = islandBounds[1].getX();
+        double y2 = islandBounds[1].getY();
+        double z2 = islandBounds[1].getZ();
+
+        double centerX = (x1 + x2) / 2.0;
+        double centerY = (y1 + y2) / 2.0;
+        double centerZ = (z1 + z2) / 2.0;
+
+        return new Location(this.getLocation().getWorld(), centerX, getPlacementHeight(), centerZ);
+    }
+    public Location[] getBounds()
+    {
+
+        double minX = Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE;
+        double minZ = Double.MAX_VALUE;
+
+        double maxX = -Double.MAX_VALUE;
+        double maxY = -Double.MAX_VALUE;
+        double maxZ = -Double.MAX_VALUE;
+
+        for (FragmentManager fragment : this.getFragments()) {
+            Location minLoc = fragment.getFirstCorner();
+            Location maxLoc = fragment.getSecondCorner();
+
+            minX = Math.min(minX, minLoc.getX());
+            minY = Math.min(minY, minLoc.getY());
+            minZ = Math.min(minZ, minLoc.getZ());
+
+            maxX = Math.max(maxX, maxLoc.getX());
+            maxY = Math.max(maxY, maxLoc.getY());
+            maxZ = Math.max(maxZ, maxLoc.getZ());
+        }
+        return new Location[] {
+                new Location(this.getLocation().getWorld(), minX, minY, minZ),
+                new Location(this.getLocation().getWorld(), maxX, maxY, maxZ)
+        };
+    }
     public List<UUID> getFriends()
     {
         return new ArrayList<UUID>(friends);
@@ -600,27 +619,27 @@ public class IslandManager {
         return created_time;
     }
 
-    public void add(CubeManager cubeManager)
+    public void add(FragmentManager fragmentManager)
     {
-        if (cubes.isEmpty()) location = cubeManager.getCenter().clone();
-        cubes.put(cubeManager.getId(), cubeManager);
+        if (fragments.isEmpty()) location = fragmentManager.getCenter().clone();
+        fragments.put(fragmentManager.getId(), fragmentManager);
     }
 
     public int getHeight() {
         return height;
     }
 
-    public List<CubeManager> getCubes()
+    public List<FragmentManager> getFragments()
     {
-        return new ArrayList<CubeManager>(this.cubes.values());
+        return new ArrayList<FragmentManager>(this.fragments.values());
     }
-    public void removeCube(CubeManager cubeManager)
+    public void removeFragment(FragmentManager fragmentManager)
     {
-        this.cubes.remove(cubeManager.getId());
+        this.fragments.remove(fragmentManager.getId());
     }
-    public boolean hasCube(CubeManager cubeManager)
+    public boolean hasFragment(FragmentManager fragmentManager)
     {
-        return this.cubes.containsKey(cubeManager.getId());
+        return this.fragments.containsKey(fragmentManager.getId());
     }
     public UUID generateID()
     {
@@ -633,7 +652,7 @@ public class IslandManager {
     }
     public boolean isInIsland(Location location)
     {
-        List<CubeManager> cubes = new ArrayList<>(this.cubes.values());
-        return cubes.stream().anyMatch(cube -> CubeManager.isInCube(location, cube));
+        List<FragmentManager> fragments = new ArrayList<>(this.fragments.values());
+        return fragments.stream().anyMatch(fragment -> FragmentManager.isInFragment(location, fragment));
     }
 }

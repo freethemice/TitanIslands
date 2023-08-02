@@ -92,9 +92,7 @@ public class TitanIslands extends JavaPlugin {
         }
 
         IslandManager.loadAll();
-        CubeManager.loadAll();
-
-        playerManager.loadFixer();
+        FragmentManager.loadAll();
 
         new IslandSpawnerRunnable().runTaskTimer(this, configManager.getTime() * 20L, configManager.getTime() * 20L);
         new CompassRunnable().runTaskTimer(this, 10, 10);
@@ -197,8 +195,8 @@ public class TitanIslands extends JavaPlugin {
                             messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.world"));
                             return true;
                         }
-                        CubeManager cubeManager = CubeManager.getCube(((Player) sender).getLocation());
-                        if (cubeManager == null || !playerManager.isOwnedByPlayer(((Player) sender), cubeManager)) {
+                        FragmentManager fragmentManager = FragmentManager.getFragment(((Player) sender).getLocation());
+                        if (fragmentManager == null || !playerManager.isOwnedByPlayer(((Player) sender), fragmentManager)) {
                             messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.must_be_inside"));
                             return true;
                         }
@@ -224,13 +222,13 @@ public class TitanIslands extends JavaPlugin {
                             messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.home"));
                             return true;
                         }
-                        ConfirmationDialog.show((Player) sender, LangManager.instants.getMessage("cube_delete"), new BukkitRunnable() {
+                        ConfirmationDialog.show((Player) sender, LangManager.instants.getMessage("fragment_delete"), new BukkitRunnable() {
                             @Override
                             public void run() {
                                 PlayerManager.instants.remove((Player) sender, island);
-                                for(CubeManager cubeManager: island.getCubes())
+                                for(FragmentManager fragmentManager : island.getFragments())
                                 {
-                                    PlayerManager.instants.remove((Player) sender, cubeManager);
+                                    PlayerManager.instants.remove((Player) sender, fragmentManager);
                                 }
                                 messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("done"));
                             }
@@ -251,15 +249,15 @@ public class TitanIslands extends JavaPlugin {
                             return true;
                         }
                         PlayerManager.instants.add((Player) sender, island);
-                        for(CubeManager cubeManager: island.getCubes())
+                        for(FragmentManager fragmentManager : island.getFragments())
                         {
-                            StructureManager structure = StructureManager.getStructure(cubeManager.getNamespace(), cubeManager.getType(), cubeManager.getName());
-                            PlayerManager.instants.add((Player) sender, cubeManager);
+                            StructureManager structure = StructureManager.getStructure(fragmentManager.getNamespace(), fragmentManager.getType(), fragmentManager.getName());
+                            PlayerManager.instants.add((Player) sender, fragmentManager);
                             int max = structure.getPersonalLimit();
                             String maxNumber = String.valueOf(max);
                             if (max < 0) maxNumber = LangManager.instants.getMessage("unlimited");
-                            int count = playerManager.getCount((Player) sender, cubeManager);
-                            messageTool.sendMessagePlayer((Player) sender, ChatColor.AQUA + cubeManager.getName() + ChatColor.WHITE + " (" + count + "/" + maxNumber + ")");
+                            int count = playerManager.getCount((Player) sender, fragmentManager);
+                            messageTool.sendMessagePlayer((Player) sender, ChatColor.AQUA + fragmentManager.getName() + ChatColor.WHITE + " (" + count + "/" + maxNumber + ")");
                         }
                         messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("done"));
                     }
@@ -277,12 +275,12 @@ public class TitanIslands extends JavaPlugin {
                             messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.world"));
                             return true;
                         }
-                        CubeManager cubeManager = CubeManager.getCube(((Player) sender).getLocation());
-                        if (cubeManager == null || !playerManager.isOwnedByPlayer(((Player) sender), cubeManager)) {
+                        FragmentManager fragmentManager = FragmentManager.getFragment(((Player) sender).getLocation());
+                        if (fragmentManager == null || !playerManager.isOwnedByPlayer(((Player) sender), fragmentManager)) {
                             messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.must_be_inside"));
                             return true;
                         }
-                        Location check = cubeManager.getCenter();
+                        Location check = fragmentManager.getCenter();
                         if (args.length > 1) {
                             String plugin = args[1];
                             StructureTypeEnum section = StructureTypeEnum.getType(args[2]);
@@ -311,16 +309,16 @@ public class TitanIslands extends JavaPlugin {
                                     return true;
                                 }
                             }
-                            ConfirmationDialog.show((Player) sender, LangManager.instants.getMessage("cube_replace"),  new BukkitRunnable() {
+                            ConfirmationDialog.show((Player) sender, LangManager.instants.getMessage("fragment_replace"),  new BukkitRunnable() {
                                 @Override
                                 public void run() {
                                     int i = level - cost;
                                     if (i < 0) i = 0;
                                     ((Player) sender).setLevel(i);
-                                    UUID owner = PlayerManager.instants.getOwner(cubeManager);
-                                    Location firstCorner = cubeManager.getCenter();
-                                    CubeManager build = structure.build(firstCorner.clone(), cubeManager.getIsland().getHeight());
-                                    build.place(cubeManager.getIsland(), structure);
+                                    UUID owner = PlayerManager.instants.getOwner(fragmentManager);
+                                    Location firstCorner = fragmentManager.getCenter();
+                                    FragmentManager build = structure.build(firstCorner.clone(), fragmentManager.getIsland().getHeight());
+                                    build.place(fragmentManager.getIsland(), structure);
                                     playerManager.add((Player) sender, build);
                                     String maxNumber = String.valueOf(max);
                                     if (max < 0) maxNumber = LangManager.instants.getMessage("unlimited");
@@ -339,21 +337,21 @@ public class TitanIslands extends JavaPlugin {
                             messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.world"));
                             return true;
                         }
-                        CubeManager cubeManager = CubeManager.getCube(((Player) sender).getLocation());
-                        if (cubeManager == null || !playerManager.isOwnedByPlayer(((Player) sender), cubeManager)) {
+                        FragmentManager fragmentManager = FragmentManager.getFragment(((Player) sender).getLocation());
+                        if (fragmentManager == null || !playerManager.isOwnedByPlayer(((Player) sender), fragmentManager)) {
                             messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.must_be_inside"));
                             return true;
                         }
-                        ConfirmationDialog.show((Player) sender, LangManager.instants.getMessage("cube_delete"),  new BukkitRunnable() {
+                        ConfirmationDialog.show((Player) sender, LangManager.instants.getMessage("fragment_delete"),  new BukkitRunnable() {
                             @Override
                             public void run() {
-                                UUID owner = PlayerManager.instants.getOwner(cubeManager);
-                                Location firstCorner = cubeManager.getCenter();
+                                UUID owner = PlayerManager.instants.getOwner(fragmentManager);
+                                Location firstCorner = fragmentManager.getCenter();
                                 String emptyType = "water";
                                 if (ConfigManager.getInstants().getType().equalsIgnoreCase("air")) emptyType = "air";
-                                StructureManager structure = StructureManager.getStructure("titanislands", StructureTypeEnum.INLAND, emptyType);
-                                CubeManager build = structure.build(firstCorner.clone(), cubeManager.getIsland().getHeight());
-                                build.place(cubeManager.getIsland(), structure);
+                                StructureManager structure = StructureManager.getStructure("primary", StructureTypeEnum.INLAND, emptyType);
+                                FragmentManager build = structure.build(firstCorner.clone(), fragmentManager.getIsland().getHeight());
+                                build.place(fragmentManager.getIsland(), structure);
                                 playerManager.add((Player) sender, build);
                                 messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("done"));
                             }
@@ -367,12 +365,12 @@ public class TitanIslands extends JavaPlugin {
                             return true;
                         }
                         BlockFace facing = ((Player) sender).getFacing();
-                        CubeManager cubeManager = CubeManager.getCube(((Player) sender).getLocation());
-                        if (cubeManager == null || !playerManager.isOwnedByPlayer(((Player) sender), cubeManager)) {
+                        FragmentManager fragmentManager = FragmentManager.getFragment(((Player) sender).getLocation());
+                        if (fragmentManager == null || !playerManager.isOwnedByPlayer(((Player) sender), fragmentManager)) {
                             messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.must_be_inside"));
                             return true;
                         }
-                        Location check = cubeManager.getCenter();
+                        Location check = fragmentManager.getCenter();
                         if (args.length > 1) {
                             String plugin = args[1];
                             StructureTypeEnum section = StructureTypeEnum.getType(args[2]);
@@ -408,10 +406,10 @@ public class TitanIslands extends JavaPlugin {
                             int i = level - cost;
                             if (i < 0) i = 0;
                             ((Player) sender).setLevel(i);
-                            check = CubeManager.adjustLocation(structure, check, facing);
-                            CubeManager build = structure.build(check, cubeManager.getIsland().getHeight());
-                            if (!CubeManager.isOverlapping(build)) {
-                                IslandManager islandManager = IslandManager.getIsland(cubeManager);
+                            check = FragmentManager.adjustLocation(structure, check, facing);
+                            FragmentManager build = structure.build(check, fragmentManager.getIsland().getHeight());
+                            if (!FragmentManager.isOverlapping(build)) {
+                                IslandManager islandManager = IslandManager.getIsland(fragmentManager);
                                 build.place(islandManager, structure);
                                 playerManager.add((Player) sender, build);
                                 String maxNumber = String.valueOf(max);
@@ -481,17 +479,17 @@ public class TitanIslands extends JavaPlugin {
                             messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.world"));
                             return true;
                         }
-                        CubeManager cubeManager = CubeManager.getCube(((Player) sender).getLocation());
+                        FragmentManager fragmentManager = FragmentManager.getFragment(((Player) sender).getLocation());
 
-                        if (cubeManager == null) {
+                        if (fragmentManager == null) {
                             messageTool.sendMessagePlayer((Player) sender,"&aIs Island: &fwild");
                             messageTool.sendMessagePlayer((Player) sender,"&aOwner: &fwild");
                         } else
                         {
-                            IslandManager islandManager = IslandManager.getIsland(cubeManager);
+                            IslandManager islandManager = IslandManager.getIsland(fragmentManager);
                             messageTool.sendMessagePlayer((Player) sender,"&aIs Island: &f" + (islandManager != null));
 
-                            UUID owner = PlayerManager.instants.getOwner(cubeManager);
+                            UUID owner = PlayerManager.instants.getOwner(fragmentManager);
                             if (owner != null)
                             {
                                 OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(owner);
@@ -638,16 +636,16 @@ public class TitanIslands extends JavaPlugin {
                             IslandManager islandManager = new IslandManager();
                             StructureManager structure = StructureManager.getStructure(plugin, section, name);
                             Location location = ((Player) sender).getLocation().clone();
-                            CubeManager preBuild = structure.getPreBuild(location, islandManager.getHeight());
-                            boolean anyCubes = CubeManager.isOverlapping(preBuild);
-                            if (anyCubes) {
+                            FragmentManager preBuild = structure.getPreBuild(location, islandManager.getHeight());
+                            boolean anyFragments = FragmentManager.isOverlapping(preBuild);
+                            if (anyFragments) {
                                 messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.inside"));
                                 return true;
                             }
                             //make sure nothing got mess-up when we checked it
                             structure = StructureManager.getStructure(plugin, section, name);
                             location = ((Player) sender).getLocation().clone();
-                            CubeManager build = structure.build(location, islandManager.getHeight());
+                            FragmentManager build = structure.build(location, islandManager.getHeight());
                             build.place(new IslandManager(), structure);
                         }
 
@@ -675,7 +673,7 @@ public class TitanIslands extends JavaPlugin {
     {
         StructureManager.save();
         IslandManager.saveAll();
-        CubeManager.saveAll();
+        FragmentManager.saveAll();
         playerManager.save();
     }
     private static final Map<UUID, Boolean> adminMode = new HashMap<UUID, Boolean>();
