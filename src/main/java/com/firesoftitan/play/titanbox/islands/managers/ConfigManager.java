@@ -209,12 +209,14 @@ public class ConfigManager {
     }
 
     public String getDefault_starting_shore() {
-        if (StructureManager.getStructure(default_starting_shore) == null) return Objects.requireNonNull(StructureManager.getRandomIsland()).getName();
+        String[] split = default_starting_shore.split(":");
+        if (StructureManager.getStructure(split[0], split[1], split[2]) == null) return Objects.requireNonNull(StructureManager.getRandomStructure()).getName();
         return default_starting_shore;
     }
 
     public String getDefault_starting_inland() {
-        if (StructureManager.getStructure(default_starting_shore) == null) return Objects.requireNonNull(StructureManager.getRandomIsland()).getName();
+        String[] split = default_starting_inland.split(":");
+        if (StructureManager.getStructure(split[0], split[1], split[2]) == null) return Objects.requireNonNull(StructureManager.getRandomStructure()).getName();
         return default_starting_inland;
     }
 

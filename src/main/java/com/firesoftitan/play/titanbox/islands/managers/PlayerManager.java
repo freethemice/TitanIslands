@@ -1,14 +1,12 @@
 package com.firesoftitan.play.titanbox.islands.managers;
 
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
+import com.firesoftitan.play.titanbox.islands.enums.StructureTypeEnum;
 import com.firesoftitan.play.titanbox.libs.managers.SaveManager;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 
 public class PlayerManager {
@@ -22,6 +20,48 @@ public class PlayerManager {
     {
         return playerData.contains(player.getUniqueId().toString());
     }
+
+    @Deprecated
+    public void loadFixer()
+    {
+        Set<String> keys = playerData.getKeys();
+        for (String uuid: keys)
+        {
+            Set<String> keys1 = playerData.getKeys(uuid + ".counts");
+            for (String key: keys1)
+            {
+                if (!key.contains(":"))
+                {
+                    System.out.println("Count: " + key);
+                    StructureManager manager = StructureManager.oldNamingStructures.get(key);
+                    if (manager != null) {
+                        String name = manager.getType().getName();
+                        String path = uuid + ".counts.titanislands:" + name + ":" + key;
+                        int anInt = playerData.getInt(uuid + ".counts." + key);
+                        playerData.set(path, anInt);
+                    }
+                    playerData.delete(uuid + ".counts." + key);
+                }
+            }
+            List<String> unlocked = playerData.getStringList(uuid + ".unlocked");
+            List<String> updatedUnlocked = new ArrayList<String>();
+            System.out.println("Unlock: " + unlocked.size());
+            for (String key: unlocked) {
+                System.out.println("Unlock: " + key);
+                if (!key.contains(":")) {
+                    StructureManager manager = StructureManager.oldNamingStructures.get(key);
+                    String name = manager.getType().getName();
+                    updatedUnlocked.add("titanisland:" + name + ":" + key);
+                }
+                else
+                {
+                    updatedUnlocked.add(key);
+                }
+            }
+            playerData.set(uuid + ".unlocked", updatedUnlocked);
+        }
+    }
+
     public void remove(Player player, IslandManager islandManager)
     {
         playerData.delete(player.getUniqueId() + ".islands." + islandManager.getId());
@@ -39,75 +79,103 @@ public class PlayerManager {
     {
         playerData.set(player.getUniqueId() + ".cubes." + cubeManager.getId() + ".key", cubeManager.getId());
         int count = 0;
-        if (playerData.contains(player.getUniqueId() + ".counts." + cubeManager.getName()))
+        if (playerData.contains(player.getUniqueId() + ".counts." + cubeManager.getNamespace()  + ":" +  cubeManager.getType().getName()  + ":" +  cubeManager.getName()))
         {
-            count = playerData.getInt(player.getUniqueId() + ".counts." + cubeManager.getName());
+            count = playerData.getInt(player.getUniqueId() + ".counts." + cubeManager.getNamespace()  + ":" +  cubeManager.getType().getName()  + ":" +  cubeManager.getName());
         }
         count++;
-        playerData.set(player.getUniqueId() + ".counts." + cubeManager.getName(), count);
+        playerData.set(player.getUniqueId() + ".counts." + cubeManager.getNamespace()  + ":" +  cubeManager.getType().getName()  + ":" +  cubeManager.getName(), count);
     }
-    public void setCount(Player player, String name, int amount)
+    public void setCount(Player player, StructureManager structureManager, int amount)
     {
-        setCount(player.getUniqueId(), name, amount);
+        setCount(player.getUniqueId(), structureManager, amount);
     }
-    public void setCount(UUID uuid, String name, int amount)
+    public void setCount(UUID uuid, StructureManager structureManager, int amount)
     {
-        playerData.set(uuid + ".counts." + name, amount);
+        playerData.set(uuid + ".counts." + structureManager.getNamespace() + ":" + structureManager.getType().getName() + ":" + structureManager.getName(), amount);
     }
 
     public int getCount(Player player, CubeManager cubeManager)
     {
-        return getCount(player, cubeManager.getName());
+        return getCount(player.getUniqueId(), cubeManager);
     }
     public int getCount(UUID uuid, CubeManager cubeManager)
     {
-        return getCount(uuid, cubeManager.getName());
+        StructureManager structure = StructureManager.getStructure(cubeManager.getNamespace(), cubeManager.getType(), cubeManager.getName());
+        return getCount(uuid, structure);
     }
-    public int getCount(Player player, String name)
+    public int getCount(Player player, StructureManager structureManager)
     {
-        return getCount(player.getUniqueId(), name);
+        return getCount(player.getUniqueId(), structureManager);
     }
-    public List<String> getCountList(Player player)
+    public List<StructureManager> getCountList(Player player)
     {
         return getCountList(player.getUniqueId());
     }
-    public List<String> getCountList(UUID uuid)
+    public List<StructureManager> getCountList(UUID uuid)
     {
-        return new ArrayList<String>(playerData.getKeys(uuid + ".counts"));
+        List<StructureManager> managers = new ArrayList<StructureManager>();
+        for(String key: playerData.getKeys(uuid + ".counts"))
+        {
+            managers.add(StructureManager.getStructure(key));
+        }
+        return managers;
     }
-    public int getCount(UUID uuid, String name)
+    public int getCount(UUID uuid, StructureManager structureManager)
     {
         int count = 0;
-        if (playerData.contains(uuid + ".counts." + name))
+        if (playerData.contains(uuid + ".counts." + structureManager.getNamespace() + ":" + structureManager.getType().getName() + ":" + structureManager.getName()))
         {
-            count = playerData.getInt(uuid + ".counts." + name);
+            count = playerData.getInt(uuid + ".counts." + structureManager.getNamespace() + ":" + structureManager.getType().getName() + ":" + structureManager.getName());
         }
         return count;
     }
-    public void unlock(Player player, String name)
+    public void unlock(Player player,StructureManager structureManager)
     {
-        unlock(player.getUniqueId(), name);
+        unlock(player.getUniqueId(), structureManager);
     }
-    public void unlock(UUID uuid, String name)
+    public void unlock(UUID uuid, StructureManager structureManager)
     {
-        name = name.toLowerCase();
         List<String> stringList = playerData.getStringList(uuid + ".unlocked");
         if (stringList == null) stringList = new ArrayList<String>();
-        if (!stringList.contains(name)) stringList.add(name);
+        if (!stringList.contains(structureManager.getNamespace() + ":" + structureManager.getType().getName() + ":" + structureManager.getName())) stringList.add(structureManager.getNamespace() + ":" + structureManager.getType().getName() + ":" + structureManager.getName());
         playerData.set(uuid + ".unlocked", stringList);
     }
-    public boolean isUnlocked(Player player, String name)
+    public boolean isUnlocked(Player player, StructureManager structureManager)
     {
-        return isUnlocked(player.getUniqueId(), name);
+        return isUnlocked(player.getUniqueId(), structureManager);
     }
-    public boolean isUnlocked(UUID uuid, String name)
+    public boolean isUnlocked(UUID uuid, StructureManager structureManager)
     {
-        name = name.toLowerCase();
         List<String> stringList = playerData.getStringList(uuid + ".unlocked");
         if (stringList == null) stringList = new ArrayList<String>();
-        return stringList.contains(name);
+        return stringList.contains(structureManager.getNamespace() + ":" + structureManager.getType().getName() + ":" + structureManager.getName());
 
     }
+    public List<String> getUnlocked(Player player, String namespace)
+    {
+        List<String> stringList = playerData.getStringList(player.getUniqueId() + ".unlocked");
+        if (stringList == null) stringList = new ArrayList<String>();
+        List<String> out = new ArrayList<String>();
+        for(String key: stringList)
+        {
+            if (key.startsWith(namespace + ":" )) out.add(key);
+        }
+        return out;
+    }
+
+    public List<String> getUnlocked(Player player, String namespace, StructureTypeEnum structureTypeEnum)
+    {
+        List<String> stringList = playerData.getStringList(player.getUniqueId() + ".unlocked");
+        if (stringList == null) stringList = new ArrayList<String>();
+        List<String> out = new ArrayList<String>();
+        for(String key: stringList)
+        {
+            if (key.startsWith(namespace + ":" + structureTypeEnum.getName() + ":")) out.add(key);
+        }
+        return out;
+    }
+
     public List<String> getUnlocked(Player player)
     {
         List<String> stringList = playerData.getStringList(player.getUniqueId() + ".unlocked");

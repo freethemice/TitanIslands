@@ -1,6 +1,7 @@
 package com.firesoftitan.play.titanbox.islands.managers;
 
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
+import com.firesoftitan.play.titanbox.islands.enums.StructureTypeEnum;
 import com.firesoftitan.play.titanbox.libs.managers.SaveManager;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -17,17 +18,8 @@ public class CubeManager {
     private static final int[] X_OFFSETS = {1, -1};
     private static final int[] Z_OFFSETS = {1, -1};
     private static final Random random = new Random(System.currentTimeMillis());
-    /**
-     * Checks if the given location overlaps with the structure for the given key.
-     * If it overlaps, it finds the first valid non-overlapping location within
-     * MAX_CHECK_OFFSET blocks.
-     *
-     * @param structureKey The key of the structure to check
-     * @param locationToCheck The location to check for overlap
-     * @return The first valid non-overlapping location, or the original location
-     *         if none found within MAX_CHECK_OFFSET
-     */
-    public static Location adjustLocation(String structureKey, Location locationToCheck) {
+
+    public static Location adjustLocation(StructureManager structure, Location locationToCheck) {
         boolean useXOffset = random.nextBoolean();
         int offsetIndex = random.nextInt(2);  // Either 0 or 1
         int xOffset = useXOffset ? X_OFFSETS[offsetIndex] : 0;
@@ -37,7 +29,7 @@ public class CubeManager {
         else if (xOffset == 1) blockFace = BlockFace.EAST;
         else if (zOffset == -1) blockFace = BlockFace.NORTH;
         else if (zOffset == 1) blockFace = BlockFace.SOUTH;
-        return adjustLocation(structureKey, locationToCheck, blockFace);
+        return adjustLocation(structure, locationToCheck, blockFace);
     }
 
     public static void deleteCube(Location location)
@@ -54,7 +46,8 @@ public class CubeManager {
         Location firstCorner = cubeManager.getCenter();
         String emptyType = "water";
         if (ConfigManager.getInstants().getType().equalsIgnoreCase("air")) emptyType = "air";
-        StructureManager structure = StructureManager.getStructure(emptyType);
+        //noinspection SpellCheckingInspection
+        StructureManager structure = StructureManager.getStructure("titanislands", StructureTypeEnum.INLAND, emptyType);
         CubeManager build = structure.build(firstCorner.clone(), cubeManager.getIsland().getHeight());
 
         cubes.remove(cubeManager.getId());
@@ -62,23 +55,12 @@ public class CubeManager {
         cubeManager.getIsland().removeCube(cubeManager);
 
     }
-    /**
-     * Checks if the given location overlaps with the structure for the given key.
-     * If it overlaps, it finds the first valid non-overlapping location within
-     * MAX_CHECK_OFFSET blocks.
-     *
-     * @param structureKey The key of the structure to check
-     * @param locationToCheck The location to check for overlap
-     * @param direction The direction in which to search for a free place
-     * @return The first valid non-overlapping location, or the original location
-     *         if none found within MAX_CHECK_OFFSET
-     */
 
-    public static Location adjustLocation(String structureKey, Location locationToCheck, BlockFace direction)
+
+    public static Location adjustLocation(StructureManager structure, Location locationToCheck, BlockFace direction)
     {
         int xOffset = direction.getModX();
         int zOffset = direction.getModZ();
-        StructureManager structure = StructureManager.getStructure(structureKey);
         if (structure == null) return null;
         for (int i = 0; i < MAX_CHECK_OFFSET; i++) {
             Location newLocation = locationToCheck.clone().add(i*xOffset, 0, i*zOffset);
@@ -222,6 +204,9 @@ public class CubeManager {
     private final Location firstCorner;
     private final Location secondCorner;
     private String name;
+    private StructureTypeEnum section;
+    private String namespace;
+
     private final UUID id;
     private final World world;
     private final long createdTime;
@@ -236,14 +221,27 @@ public class CubeManager {
     }
     public CubeManager(SaveManager saveManager)
     {
+        //converts it from old naming, remove after updating server
+        if (!saveManager.contains("namespace") || !saveManager.contains("section") )
+        {
+            saveManager.set("namespace", "titanislands");
+            saveManager.set("type", StructureManager.oldNamingStructures.get(saveManager.getString("name")).getType().getName());
+        }
+        //converts it from old naming, remove after updating server
+
         this.firstCorner = saveManager.getLocation("first_corner");
         this.secondCorner = saveManager.getLocation("second_corner");
         this.name = saveManager.getString("name");
+        this.namespace = saveManager.getString("namespace");
+        this.section = StructureTypeEnum.getType(saveManager.getString("type"));
         this.id = saveManager.getUUID("id");
         this.createdTime = saveManager.getLong("created_time");
         this.world = firstCorner.getWorld();
         this.islandManager = IslandManager.getIsland(saveManager.getUUID("island.id"));
         this.islandManager.add(this);
+
+
+
     }
 
     public UUID getOwner()
@@ -275,8 +273,18 @@ public class CubeManager {
         saveManager.set("created_time", this.createdTime);
         saveManager.set("id", this.id);
         saveManager.set("name", this.name);
+        saveManager.set("namespace", this.namespace);
+        saveManager.set("type", this.section.getName());
         if (this.islandManager != null) saveManager.set("island.id", this.islandManager.getId());
         return saveManager;
+    }
+
+    public StructureTypeEnum getType() {
+        return section;
+    }
+
+    public String getNamespace() {
+        return namespace;
     }
 
     public String getName() {
@@ -286,10 +294,21 @@ public class CubeManager {
     {
         CubeManager.placeCube(this);
     }
-    public void place(IslandManager islandManager, String name)
+    public void place(IslandManager islandManager, StructureManager structureManager)
+    {
+        this.islandManager = islandManager;
+        this.name = structureManager.getName();
+        this.namespace = structureManager.getNamespace();
+        this.section = structureManager.getType();
+        CubeManager.placeCube(this);
+        this.islandManager.add(this);
+    }
+    public void place(IslandManager islandManager, String namespace, StructureTypeEnum section, String name)
     {
         this.islandManager = islandManager;
         this.name = name;
+        this.namespace = namespace;
+        this.section = section;
         CubeManager.placeCube(this);
         this.islandManager.add(this);
 

@@ -1,10 +1,7 @@
 package com.firesoftitan.play.titanbox.islands.runnables;
 
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
-import com.firesoftitan.play.titanbox.islands.managers.ConfigManager;
-import com.firesoftitan.play.titanbox.islands.managers.CubeManager;
-import com.firesoftitan.play.titanbox.islands.managers.IslandManager;
-import com.firesoftitan.play.titanbox.islands.managers.LangManager;
+import com.firesoftitan.play.titanbox.islands.managers.*;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -41,6 +38,8 @@ public class IslandRemoverRunnable extends BukkitRunnable {
         {
             CubeManager cube = cubes.get(0);
             CubeManager.deleteCube(cube.getCenter());
+            int structureCount = StructureManager.getStructureCount(cube.getName());
+            StructureManager.setStructureCount(cube.getName(), structureCount - 1);//global count
             cubes.remove(0);
             if (cubes.isEmpty())
             {

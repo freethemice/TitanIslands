@@ -1,6 +1,7 @@
 package com.firesoftitan.play.titanbox.islands.listeners;
 
 import com.firesoftitan.play.titanbox.islands.enums.MoveThresholdEnum;
+import com.firesoftitan.play.titanbox.islands.enums.StructureTypeEnum;
 import com.firesoftitan.play.titanbox.islands.managers.*;
 import com.firesoftitan.play.titanbox.islands.runnables.CompassRunnable;
 import com.firesoftitan.play.titanbox.islands.runnables.IslandSpawnerRunnable;
@@ -67,19 +68,21 @@ public class MainListener implements Listener {
             Bukkit.getScheduler().runTaskLater(instance, () -> {
                 CubeManager cube = CubeManager.getCube(player.getLocation());
                 if (cube != null) {
-                    String name = cube.getName();
-                    boolean unlocked = playerManager.isUnlocked(player, name);
-                    StructureManager structure = StructureManager.getStructure(name);
-                    if (!unlocked && !name.equalsIgnoreCase("water")&& !name.equalsIgnoreCase("air")) {
-                        playerManager.unlock(player, name);
-                        messageTool.sendMessagePlayer(player, LangManager.instants.getMessage("unlocked") + structure.getTitle());
-                        int personalLimit = structure.getPersonalLimit();
-                        String txtAmount = String.valueOf(personalLimit);
-                        if (personalLimit == -1) txtAmount = LangManager.instants.getMessage("unlimited");
-                        if (personalLimit == 0) txtAmount = LangManager.instants.getMessage("none");
-                        txtAmount = txtAmount + LangManager.instants.getMessage("these");
-                        messageTool.sendMessagePlayer(player, LangManager.instants.getMessage("build") + txtAmount);
-                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                    StructureManager structure = StructureManager.getStructure(cube.getNamespace(), cube.getType(), cube.getName());
+                    if (structure != null) {
+                        String name = cube.getName();
+                        boolean unlocked = playerManager.isUnlocked(player, structure);
+                        if (!unlocked && !name.equalsIgnoreCase("water") && !name.equalsIgnoreCase("air")) {
+                            playerManager.unlock(player, structure);
+                            messageTool.sendMessagePlayer(player, LangManager.instants.getMessage("unlocked") + structure.getTitle());
+                            int personalLimit = structure.getPersonalLimit();
+                            String txtAmount = String.valueOf(personalLimit);
+                            if (personalLimit == -1) txtAmount = LangManager.instants.getMessage("unlimited");
+                            if (personalLimit == 0) txtAmount = LangManager.instants.getMessage("none");
+                            txtAmount = txtAmount + LangManager.instants.getMessage("these");
+                            messageTool.sendMessagePlayer(player, LangManager.instants.getMessage("build") + txtAmount);
+                            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                        }
                     }
                 }else {
                     CubeManager closest = CubeManager.getClosest(location);
@@ -141,8 +144,8 @@ public class MainListener implements Listener {
             }.runTaskLater(instance, 10);
             String emptyType = "empty";
             if (ConfigManager.getInstants().getType().equalsIgnoreCase("air")) emptyType = "empty_air";
-            StructureManager structure = StructureManager.getStructure(emptyType);
-            playerManager.unlock(player,emptyType);
+            StructureManager structure = StructureManager.getStructure("titanislands", StructureTypeEnum.INLAND, emptyType);
+            playerManager.unlock(player, structure);
             IslandManager.generateIsland(player, location);
 
         }

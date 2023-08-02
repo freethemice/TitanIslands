@@ -1,5 +1,6 @@
 package com.firesoftitan.play.titanbox.islands;
 
+import com.firesoftitan.play.titanbox.islands.enums.StructureTypeEnum;
 import com.firesoftitan.play.titanbox.islands.guis.CompassGui;
 import com.firesoftitan.play.titanbox.islands.guis.ConfirmationDialog;
 import com.firesoftitan.play.titanbox.islands.listeners.CompassGUIListener;
@@ -39,6 +40,7 @@ public class TitanIslands extends JavaPlugin {
     public static LibsMessageTool messageTool;
     public static File tiFilePath;
     public static PlayerManager playerManager;
+    private final List<String> namespaceList = new ArrayList<String>();
     public void onEnable() {
         instance = this;
         tools = new Tools(this, new SaveRunnable(), 99835);
@@ -58,17 +60,41 @@ public class TitanIslands extends JavaPlugin {
         Objects.requireNonNull(this.getCommand("island")).setTabCompleter(new TabCompleteListener());
         Objects.requireNonNull(this.getCommand("is")).setTabCompleter(new TabCompleteListener());
 
-        File structuresFolder = new File(tiFilePath, File.separator + "structures" + File.separator);
-        for (File file : Objects.requireNonNull(structuresFolder.listFiles())) {
-            String name = file.getName();
-            if (name.toLowerCase().endsWith(".yml")) {
-                String newName = name.substring(0, name.length() - 4);
-                new StructureManager(newName);
+        File namespacesFolder = new File(tiFilePath, File.separator + "structures" + File.separator);
+        for (File folder : Objects.requireNonNull(namespacesFolder.listFiles())) {
+            String name = folder.getName();
+            if (folder.isDirectory())
+            {
+                namespaceList.add(name);
+                messageTool.sendMessageSystem("Loading Structures from: " + name);
+                File structuresFolder = new File(namespacesFolder, File.separator + name + File.separator);
+                for (StructureTypeEnum typeEnum: StructureTypeEnum.values())
+                {
+                    messageTool.sendMessageSystem("--Loading Structures from: " + typeEnum.getName());
+                    File typeFolder = new File(structuresFolder, File.separator + typeEnum.getName() + File.separator );
+                    if (typeFolder.exists() && typeFolder.isDirectory())
+                    {
+                        for (File file : Objects.requireNonNull(typeFolder.listFiles())) {
+                            String ymlName = file.getName();
+                            if (ymlName.toLowerCase().endsWith(".yml")) {
+                                messageTool.sendMessageSystem("----Loading Structure: " + ymlName);
+                                String newName = ymlName.substring(0, ymlName.length() - 4);
+                                try {
+                                    new StructureManager(name, typeEnum, newName);
+                                } catch (Exception ignore) {
+                                    messageTool.sendMessageSystem("Couldn't load file: " + name + ":" +  typeEnum.getName() + ":" + ymlName);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
         IslandManager.loadAll();
         CubeManager.loadAll();
+
+        playerManager.loadFixer();
 
         new IslandSpawnerRunnable().runTaskTimer(this, configManager.getTime() * 20L, configManager.getTime() * 20L);
         new CompassRunnable().runTaskTimer(this, 10, 10);
@@ -85,6 +111,10 @@ public class TitanIslands extends JavaPlugin {
                 saveDefaultFile(s);
             }
         }
+    }
+
+    public List<String> getNamespaceList() {
+        return namespaceList;
     }
 
     private void saveDefaultFile(String fileName) {
@@ -223,12 +253,12 @@ public class TitanIslands extends JavaPlugin {
                         PlayerManager.instants.add((Player) sender, island);
                         for(CubeManager cubeManager: island.getCubes())
                         {
-                            StructureManager structure = StructureManager.getStructure(cubeManager.getName());
+                            StructureManager structure = StructureManager.getStructure(cubeManager.getNamespace(), cubeManager.getType(), cubeManager.getName());
                             PlayerManager.instants.add((Player) sender, cubeManager);
                             int max = structure.getPersonalLimit();
                             String maxNumber = String.valueOf(max);
                             if (max < 0) maxNumber = LangManager.instants.getMessage("unlimited");
-                            int count = playerManager.getCount((Player) sender, cubeManager.getName());
+                            int count = playerManager.getCount((Player) sender, cubeManager);
                             messageTool.sendMessagePlayer((Player) sender, ChatColor.AQUA + cubeManager.getName() + ChatColor.WHITE + " (" + count + "/" + maxNumber + ")");
                         }
                         messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("done"));
@@ -254,13 +284,16 @@ public class TitanIslands extends JavaPlugin {
                         }
                         Location check = cubeManager.getCenter();
                         if (args.length > 1) {
-                            String name = args[1].toLowerCase();
-                            StructureManager structure = StructureManager.getStructure(name);
+                            String plugin = args[1];
+                            StructureTypeEnum section = StructureTypeEnum.getType(args[2]);
+                            String name = args[3];
+
+                            StructureManager structure = StructureManager.getStructure(plugin, section, name);
                             if (structure == null) {
                                 messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.no_structure"));
                                 return true;
                             }
-                            if (!playerManager.isUnlocked((Player) sender, name)) {
+                            if (!playerManager.isUnlocked((Player) sender, structure)) {
                                 messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.no_unlock"));
                                 return true;
                             }
@@ -271,7 +304,7 @@ public class TitanIslands extends JavaPlugin {
                                 return true;
                             }
                             int max = structure.getPersonalLimit();
-                            int count = playerManager.getCount((Player) sender, name);
+                            int count = playerManager.getCount((Player) sender, structure);
                             if (max > -1) {
                                 if (count > max) {
                                     messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.limit") + " (" + count + "/" + max + ")");
@@ -287,7 +320,7 @@ public class TitanIslands extends JavaPlugin {
                                     UUID owner = PlayerManager.instants.getOwner(cubeManager);
                                     Location firstCorner = cubeManager.getCenter();
                                     CubeManager build = structure.build(firstCorner.clone(), cubeManager.getIsland().getHeight());
-                                    build.place(cubeManager.getIsland(), structure.getName());
+                                    build.place(cubeManager.getIsland(), structure);
                                     playerManager.add((Player) sender, build);
                                     String maxNumber = String.valueOf(max);
                                     if (max < 0) maxNumber = LangManager.instants.getMessage("unlimited");
@@ -318,9 +351,9 @@ public class TitanIslands extends JavaPlugin {
                                 Location firstCorner = cubeManager.getCenter();
                                 String emptyType = "water";
                                 if (ConfigManager.getInstants().getType().equalsIgnoreCase("air")) emptyType = "air";
-                                StructureManager structure = StructureManager.getStructure(emptyType);
+                                StructureManager structure = StructureManager.getStructure("titanislands", StructureTypeEnum.INLAND, emptyType);
                                 CubeManager build = structure.build(firstCorner.clone(), cubeManager.getIsland().getHeight());
-                                build.place(cubeManager.getIsland(), structure.getName());
+                                build.place(cubeManager.getIsland(), structure);
                                 playerManager.add((Player) sender, build);
                                 messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("done"));
                             }
@@ -341,13 +374,15 @@ public class TitanIslands extends JavaPlugin {
                         }
                         Location check = cubeManager.getCenter();
                         if (args.length > 1) {
-                            String name = args[1].toLowerCase();
-                            StructureManager structure = StructureManager.getStructure(name);
+                            String plugin = args[1];
+                            StructureTypeEnum section = StructureTypeEnum.getType(args[2]);
+                            String name = args[3];
+                            StructureManager structure = StructureManager.getStructure(plugin, section, name);
                             if (structure == null) {
                                 messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.no_structure"));
                                 return true;
                             }
-                            if (!playerManager.isUnlocked((Player) sender, name)) {
+                            if (!playerManager.isUnlocked((Player) sender, structure)) {
                                 messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.no_unlock"));
                                 return true;
                             }
@@ -363,7 +398,7 @@ public class TitanIslands extends JavaPlugin {
                             }
 
                             int max = structure.getPersonalLimit();
-                            int count = playerManager.getCount((Player) sender, name);
+                            int count = playerManager.getCount((Player) sender, structure);
                             if (max > -1) {
                                 if (count > max) {
                                     messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.limit") + " (" + count + "/" + max + ")");
@@ -373,11 +408,11 @@ public class TitanIslands extends JavaPlugin {
                             int i = level - cost;
                             if (i < 0) i = 0;
                             ((Player) sender).setLevel(i);
-                            check = CubeManager.adjustLocation(name, check, facing);
+                            check = CubeManager.adjustLocation(structure, check, facing);
                             CubeManager build = structure.build(check, cubeManager.getIsland().getHeight());
                             if (!CubeManager.isOverlapping(build)) {
                                 IslandManager islandManager = IslandManager.getIsland(cubeManager);
-                                build.place(islandManager, structure.getName());
+                                build.place(islandManager, structure);
                                 playerManager.add((Player) sender, build);
                                 String maxNumber = String.valueOf(max);
                                 if (max < 0) maxNumber = LangManager.instants.getMessage("unlimited");
@@ -474,10 +509,12 @@ public class TitanIslands extends JavaPlugin {
                     if (args.length > 0) {
                         if (args[0].equalsIgnoreCase("unlock")) {
                             String playerName = args[1];
-                            String name = args[2];
+                            String plugin = args[2];
+                            StructureTypeEnum section = StructureTypeEnum.getType(args[3]);
+                            String name = args[4];
                             //noinspection deprecation
                             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
-                            StructureManager structure = StructureManager.getStructure(name);
+                            StructureManager structure = StructureManager.getStructure(plugin, section, name);
                             if (structure == null)
                             {
                                 messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.no_structure"));
@@ -489,9 +526,9 @@ public class TitanIslands extends JavaPlugin {
                                 messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.player"));
                                 return true;
                             }
-                            boolean unlocked = playerManager.isUnlocked(offlinePlayer.getUniqueId(), name);
+                            boolean unlocked = playerManager.isUnlocked(offlinePlayer.getUniqueId(), structure);
                             if (!unlocked && !name.equalsIgnoreCase("water")&& !name.equalsIgnoreCase("air")) {
-                                playerManager.unlock(offlinePlayer.getUniqueId(), name);
+                                playerManager.unlock(offlinePlayer.getUniqueId(), structure);
 
                                 if (offlinePlayer.isOnline()) {
                                     Player player = offlinePlayer.getPlayer();
@@ -517,8 +554,10 @@ public class TitanIslands extends JavaPlugin {
                         }
                         if (args[0].equalsIgnoreCase("count")) {
                             String playerName = args[2];
-                            String name = args[3];
-                            StructureManager structure = StructureManager.getStructure(name);
+                            String plugin = args[3];
+                            StructureTypeEnum section = StructureTypeEnum.getType(args[4]);
+                            String name = args[5];
+                            StructureManager structure = StructureManager.getStructure(plugin, section, name);
                             if (structure == null)
                             {
                                 messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.no_structure"));
@@ -532,21 +571,24 @@ public class TitanIslands extends JavaPlugin {
                             }
                             //noinspection deprecation
                             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
-                            int count = playerManager.getCount(offlinePlayer.getUniqueId(), name);
+                            int count = playerManager.getCount(offlinePlayer.getUniqueId(), structure);
                             int amount = 1;
                             if (args[1].equalsIgnoreCase("remove")) {
-                                if (args.length == 5) amount = Integer.parseInt(args[4]);
-                                playerManager.setCount(offlinePlayer.getUniqueId(), name,count - amount);
+                                if (args.length == 7) amount = Integer.parseInt(args[6]);
+                                int amount1 = count - amount;
+                                if (amount1 < 0) amount1 = 0;
+                                playerManager.setCount(offlinePlayer.getUniqueId(), structure, amount1);
                             }
                             if (args[1].equalsIgnoreCase("add")) {
-                                if (args.length == 5) amount = Integer.parseInt(args[4]);
-                                playerManager.setCount(offlinePlayer.getUniqueId(), name,count + amount);
+                                if (args.length == 7) amount = Integer.parseInt(args[6]);
+                                playerManager.setCount(offlinePlayer.getUniqueId(), structure,count + amount);
                             }
                             if (args[1].equalsIgnoreCase("set")) {
-                                if (args.length == 5) amount = Integer.parseInt(args[4]);
-                                playerManager.setCount(offlinePlayer.getUniqueId(), name,amount);
+                                if (args.length == 7) amount = Integer.parseInt(args[6]);
+                                if (amount < 0) amount = 0;
+                                playerManager.setCount(offlinePlayer.getUniqueId(), structure,amount);
                             }
-                            count = playerManager.getCount(offlinePlayer.getUniqueId(), name);
+                            count = playerManager.getCount(offlinePlayer.getUniqueId(), structure);
                             int max = structure.getPersonalLimit();
                             String maxNumber = String.valueOf(max);
                             if (max < 0) maxNumber = LangManager.instants.getMessage("unlimited");
@@ -589,8 +631,12 @@ public class TitanIslands extends JavaPlugin {
                                 messageTool.sendMessagePlayer((Player) sender, LangManager.instants.getMessage("error.world"));
                                 return true;
                             }
+                            String plugin = args[1];
+                            StructureTypeEnum section = StructureTypeEnum.getType(args[2]);
+                            String name = args[3];
+
                             IslandManager islandManager = new IslandManager();
-                            StructureManager structure = StructureManager.getStructure(args[1]);
+                            StructureManager structure = StructureManager.getStructure(plugin, section, name);
                             Location location = ((Player) sender).getLocation().clone();
                             CubeManager preBuild = structure.getPreBuild(location, islandManager.getHeight());
                             boolean anyCubes = CubeManager.isOverlapping(preBuild);
@@ -599,10 +645,10 @@ public class TitanIslands extends JavaPlugin {
                                 return true;
                             }
                             //make sure nothing got mess-up when we checked it
-                            structure = StructureManager.getStructure(args[1]);
+                            structure = StructureManager.getStructure(plugin, section, name);
                             location = ((Player) sender).getLocation().clone();
                             CubeManager build = structure.build(location, islandManager.getHeight());
-                            build.place(new IslandManager(), structure.getName());
+                            build.place(new IslandManager(), structure);
                         }
 
 

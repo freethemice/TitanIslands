@@ -18,6 +18,7 @@ error:
   home: "&4Can't abandon the island your home is set to, change your home location to abandon island."
   player: "&4Player not found."
   unlocked: "&4That player has already unlocked that."
+  section: "The structure is in the wrong folder. The section name does not match the expected section."
 confirmation: "&aAre you sure you want to do this? &7(Type: &fyes &7or &fno&7)"
 island_delete: "&aThis will delete the entier island!"
 cube_delete: "&aThis will delete the structure your standing in and keep your structure count!"

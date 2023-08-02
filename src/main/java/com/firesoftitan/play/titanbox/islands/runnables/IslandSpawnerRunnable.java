@@ -60,18 +60,23 @@ public class IslandSpawnerRunnable extends BukkitRunnable {
     public static void spawnRandomIsland(Location location) {
         int minDistance = TitanIslands.configManager.getDistance_min();  // Blocks
         int maxDistance = TitanIslands.configManager.getDistance_max() + 1; // Blocks
+        Location randomLoc;
+        int tryCount = 0;
+        do {
+            // Get random distance within range
+            int distance = random.nextInt(maxDistance - minDistance) + minDistance;
 
-        // Get random distance within range
-        int distance = random.nextInt(maxDistance - minDistance) + minDistance;
+            // Get random angle
+            double angle = random.nextDouble() * 2 * Math.PI;
 
-        // Get random angle
-        double angle = random.nextDouble() * 2 * Math.PI;
-
-        // Calculate x and z offsets
-        int xOffset = (int) (Math.sin(angle) * distance);
-        int zOffset = (int) (Math.cos(angle) * distance);
-        // Add offsets to player location
-        Location randomLoc = location.clone().add(xOffset, 0, zOffset);
+            // Calculate x and z offsets
+            int xOffset = (int) (Math.sin(angle) * distance);
+            int zOffset = (int) (Math.cos(angle) * distance);
+            // Add offsets to player location
+            randomLoc = location.clone().add(xOffset, 0, zOffset);
+            tryCount++;
+            if (tryCount > 10) return;
+        } while (!IslandManager.isSafeSpawnLocation(randomLoc));
 
         IslandManager.generateIsland(randomLoc);
 

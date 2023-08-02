@@ -20,6 +20,43 @@ public class IslandManager {
         islands.remove(islandManager.getId());
         islandSaves.delete(islandManager.getId().toString());
     }
+    private static void getIslandBounds()
+    {
+        List<IslandManager> islandManagers = new ArrayList<>(IslandManager.islands.values());
+        for (IslandManager islandManager : islandManagers) {
+            double minX = Double.MAX_VALUE;
+            double minY = Double.MAX_VALUE;
+            double minZ = Double.MAX_VALUE;
+
+            double maxX = -Double.MAX_VALUE;
+            double maxY = -Double.MAX_VALUE;
+            double maxZ = -Double.MAX_VALUE;
+
+            for (CubeManager cube : islandManager.getCubes()) {
+                Location minLoc = cube.getFirstCorner();
+                Location maxLoc = cube.getSecondCorner();
+
+                minX = Math.min(minX, minLoc.getX());
+                minY = Math.min(minY, minLoc.getY());
+                minZ = Math.min(minZ, minLoc.getZ());
+
+                maxX = Math.max(maxX, maxLoc.getX());
+                maxY = Math.max(maxY, maxLoc.getY());
+                maxZ = Math.max(maxZ, maxLoc.getZ());
+            }
+            Location firstCorner = new Location(islandManager.getLocation().getWorld(), minX, minY, minZ);
+            Location secondCorner = new Location(islandManager.getLocation().getWorld(), maxX, maxY, maxZ);
+        }
+    }
+
+    public static Boolean isSafeSpawnLocation(Location location)
+    {
+        List<IslandManager> islandManagers = new ArrayList<>(IslandManager.islands.values());
+        for (IslandManager islandManager : islandManagers) {
+            if (islandManager.getLocation().distance(location) < ConfigManager.getInstants().getDistance_min()) return false;
+        }
+        return true;
+    }
 
     public static IslandManager getIsland(UUID uuid)
     {
@@ -102,15 +139,20 @@ public class IslandManager {
 
         String[][] island = new String[islandWidth][islandHeight];
 
-        List<String> inlandWords = StructureManager.getInlandStructures();
-        inlandWords.addAll(StructureManager.getWoodStructures());
+        List<String> inlandWords = convertStructureToWords(StructureManager.getInlandStructures());
+        List<String> shoreWords =convertStructureToWords(StructureManager.getShoreStructures());
+        List<String> mineralWords =convertStructureToWords(StructureManager.getMineralStructures());
+        List<String> animalWords = convertStructureToWords(StructureManager.getAnimalStructures());
+        List<String> buildinglWords = convertStructureToWords(StructureManager.getBuildingStructures());
+
+
         boolean animals = false;
         boolean structure = false;
-        if (islandWidth > 4 && islandHeight > 4) inlandWords.addAll(StructureManager.getMineralStructures());
+        if (islandWidth > 4 && islandHeight > 4) inlandWords.addAll(mineralWords);
         if (islandWidth > 5 && islandHeight > 5) animals = true;
         if (islandWidth > 5 && islandHeight > 5) structure = true;
         String woodType = getWoodTypeKey();
-        List<String> shoreWords = StructureManager.getShoreStructures();
+
 
         for (int row = 0; row < islandWidth; row++) {
             for (int col = 0; col < islandHeight; col++) {
@@ -125,19 +167,20 @@ public class IslandManager {
                 }
                 else {
                     List<String> correctedList = new ArrayList<String>(inlandWords);
-                    if (animals && random.nextDouble() > 0.4D) correctedList.addAll(StructureManager.getAnimalStructures());
-                    if (structure && random.nextDouble() > 0.2D) correctedList.addAll(StructureManager.getStructureStructures());
+                    if (animals && random.nextDouble() > 0.4D) correctedList.addAll(animalWords);
+                    if (structure && random.nextDouble() > 0.2D) correctedList.addAll(buildinglWords);
                     selectedWord = getRandomWordFromList(correctedList, randomValue, info);
                 }
                 if (selectedWord != null) {
-                    if (StructureManager.getStructure(selectedWord).getType() == StructureTypeEnum.ANIMAL) info.setAnimalCount(info.getAnimalCount() + 1);
-                    if (StructureManager.getStructure(selectedWord).getType() == StructureTypeEnum.BUILDING) info.setBuildingCount(info.getBuildingCount() + 1);
+                    String[] split = selectedWord.split(":");
+                    if (StructureManager.getStructure(split[0], split[1], split[2]).getType() == StructureTypeEnum.ANIMAL) info.setAnimalCount(info.getAnimalCount() + 1);
+                    if (StructureManager.getStructure(split[0], split[1], split[2]).getType() == StructureTypeEnum.BUILDING) info.setBuildingCount(info.getBuildingCount() + 1);
                     animals = info.canAddMoreAnimals();
                     structure = info.canAddMoreBuilding();
-                    if (StructureManager.getStructure(selectedWord).getType() == StructureTypeEnum.WOOD) selectedWord = woodType;
+                    if (StructureManager.getStructure(split[0], split[1], split[2]).getType() == StructureTypeEnum.WOOD) selectedWord = woodType;
 
                     int structureCount = StructureManager.getStructureCount(selectedWord);
-                    int max = StructureManager.getStructure(selectedWord).getSpawnLimit();
+                    int max = StructureManager.getStructure(split[0], split[1], split[2]).getSpawnLimit();
                     if (structureCount >= max && max > -1)
                     {
                         col--;
@@ -146,15 +189,15 @@ public class IslandManager {
                     else
                     {
                         int structureCount2 = info.getStructureCount(selectedWord);
-                        int max2 = StructureManager.getStructure(selectedWord).getIslandLimit();
+                        int max2 = StructureManager.getStructure(split[0], split[1], split[2]).getIslandLimit();
                         if (structureCount2 >= max2 && max2 > -1)
                         {
                             col--;
                             continue;
                         }
                         else {
-                            StructureManager.setStructureCount(selectedWord, structureCount + 1);
-                            info.setStructureCount(selectedWord, structureCount2 + 1);
+                            StructureManager.setStructureCount(selectedWord, structureCount + 1);//global count
+                            info.setStructureCount(selectedWord, structureCount2 + 1);//temp island generator count
                         }
                     }
 
@@ -168,14 +211,25 @@ public class IslandManager {
 
         return island;
     }
+    private static List<String> convertStructureToWords(List<StructureManager> structureManagers)
+    {
+        List<String> inlandWords = new ArrayList<String>();
+        for (StructureManager ssw: structureManagers)
+        {
+            inlandWords.add(ssw.getNamespace() + ":" + ssw.getType().getName() + ":" + ssw.getName());
+        }
+        return inlandWords;
+    }
     private static String getWoodTypeKey() {
 
-        List<String> structures = StructureManager.getWoodStructures();
+        List<String> structures = convertStructureToWords(StructureManager.getWoodStructures());
 
         // Get total odds
         int totalOdds = 0;
         for (String s : structures) {
-            totalOdds += StructureManager.getStructure(s).getOdds();
+            String[] split = s.split(":");
+
+            totalOdds += StructureManager.getStructure(split[0], split[1], split[2]).getOdds();
         }
 
         // Pick random number between 0 and total odds
@@ -184,7 +238,8 @@ public class IslandManager {
         // Loop through structures until random falls into odds range
         int odds = 0;
         for (String s : structures) {
-            odds += StructureManager.getStructure(s).getOdds();
+            String[] split = s.split(":");
+            odds += StructureManager.getStructure(split[0], split[1], split[2]).getOdds();
             if (random < odds) {
                 return s;
             }
@@ -198,7 +253,8 @@ public class IslandManager {
         String defaultWord = null;
         double defaultOdds = 0;
         for (String word : words) {
-            StructureManager structure = StructureManager.getStructure(word);
+            String[] split = word.split(":");
+            StructureManager structure = StructureManager.getStructure(split[0], split[1], split[2]);
             double height = structure.getHeightMap();
             double spawnOddsValue = structure.getOdds();
             if (defaultWord == null || spawnOddsValue > defaultOdds) {

@@ -9,6 +9,7 @@ import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
 import org.bukkit.structure.Structure;
 import org.bukkit.util.BlockVector;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,14 +35,13 @@ public class StructureManager {
         structureData.set(name + ".count", value);
     }
 
-
-    public static String[]  getAllIslandAsArray() {
+    public static String[] getAllStructureAsArray() {
         return allStructures.keySet().toArray(new String[0]);
     }
-    public static List<String> getAllIslandAsList() {
+    public static List<String> getAllStructureAsList() {
         return new ArrayList<String>(allStructures.keySet());
     }
-    public static StructureManager getRandomIsland() {
+    public static StructureManager getRandomStructure() {
         Map<String, Integer> nameToOdds = new HashMap<>();
         for (String key : allStructures.keySet()) {
             StructureManager structure = allStructures.get(key);
@@ -72,7 +72,8 @@ public class StructureManager {
             float oddProbability = (float) odd / totalOdds;
             runningProduct *= 1 - oddProbability;
             if (randomFloat < runningProduct) {
-                StructureManager structure = StructureManager.getStructure(name);
+                String[] split = name.split(":");
+                StructureManager structure = StructureManager.getStructure(split[0], StructureTypeEnum.getType(split[1]), split[2]);
                 if (structure != null) {
                     return structure;
                 }
@@ -80,7 +81,8 @@ public class StructureManager {
         }
         // Pick random structure if running product approach does not work
         String randomKey = (String) nameToOdds.keySet().toArray()[random.nextInt(nameToOdds.size())];
-        return StructureManager.getStructure(randomKey);
+        String[] split = randomKey.split(":");
+        return StructureManager.getStructure(split[0], StructureTypeEnum.getType(split[1]), split[2]);
     }
 
     private static Structure load(File section)
@@ -93,17 +95,16 @@ public class StructureManager {
         }
         return null;
     }
-    private static Location getAdjustedPlacement(Location location, String name, int height)
+    private static Location getAdjustedPlacement(Location location, StructureManager structureManager, int height)
     {
-        StructureManager structure1 = StructureManager.getStructure(name);
-        Structure structure = load(structure1.nbtFile);
+        Structure structure = load(structureManager.nbtFile);
         assert structure != null;
         BlockVector size = structure.getSize();
         Location location1 = new Location(location.getWorld(), location.getBlockX() + size.getBlockX(), location.getBlockY() + size.getBlockY(), location.getBlockZ() + size.getBlockZ());
         CubeManager selectorTool = new CubeManager(location, location1);
         Location center = selectorTool.getCenterOffset();
         Location subtract = location.clone().subtract(center);
-        subtract.setY(height - structure1.getSeaLevelOffset() );
+        subtract.setY(height - structureManager.getSeaLevelOffset() );
 
         return subtract.clone();
     }
@@ -139,6 +140,9 @@ public class StructureManager {
         Location location1 = new Location(location.getWorld(), location.getBlockX() + size.getBlockX(), location.getBlockY() + size.getBlockY(), location.getBlockZ() + size.getBlockZ());
         return new CubeManager(location, location1);
     }
+
+    @Deprecated
+    public static final HashMap<String, StructureManager> oldNamingStructures = new HashMap<String, StructureManager>();
     private static final HashMap<String, StructureManager> allStructures = new HashMap<String, StructureManager>();
     private static final HashMap<String, StructureManager> shoreStructures = new HashMap<String, StructureManager>();
     private static final HashMap<String, StructureManager> inlandStructures = new HashMap<String, StructureManager>();
@@ -147,30 +151,62 @@ public class StructureManager {
     private static final HashMap<String, StructureManager> animalStructures = new HashMap<String, StructureManager>();
     private static final HashMap<String, StructureManager> woodStructures = new HashMap<String, StructureManager>();
 
-    public static StructureManager getStructure(String name) {
-        return allStructures.get(name);
+    public static StructureManager getStructure(String key) {
+        return allStructures.get(key);
     }
-    public static List<String> getStructures() {
-        return new ArrayList<String>(allStructures.keySet());
+    public static StructureManager getStructure(String namespace, String section, String name) {
+        return getStructure(namespace, StructureTypeEnum.getType(section), name);
     }
-    public static List<String> getShoreStructures() {
-        return new ArrayList<String>(shoreStructures.keySet());
+    public static StructureManager getStructure(String namespace, StructureTypeEnum section, String name) {
+        String key = namespace + ":" + section.getName() + ":" + name;
+        return getStructure(key);
     }
-    public static List<String> getInlandStructures() {
-        return new ArrayList<String>(inlandStructures.keySet());
+    public static List<StructureManager> getStructures(String namespace, StructureTypeEnum structureTypeEnum) {
+        List<StructureManager> filteredList;
+        switch (structureTypeEnum)
+        {
+            case WOOD -> filteredList = getWoodStructures();
+            case ANIMAL -> filteredList = getAnimalStructures();
+            case SHORE -> filteredList = getShoreStructures();
+            case BUILDING -> filteredList = getBuildingStructures();
+            case INLAND -> filteredList = getInlandStructures();
+            case MINERAL -> filteredList = getMineralStructures();
+            default -> filteredList =  new ArrayList<StructureManager>(allStructures.values());
+        }
+        return filterNameSpace(namespace, filteredList);
     }
 
-    public static List<String> getWoodStructures() {
-        return new ArrayList<String>(woodStructures.keySet());
+    @NotNull
+    private static List<StructureManager> filterNameSpace(String namespace, List<StructureManager> filteredList) {
+        List<StructureManager> out = new ArrayList<StructureManager>();
+        for (StructureManager key: filteredList)
+        {
+            if (key.getNamespace().equals(namespace)) out.add(key);
+        }
+        return out;
     }
-    public static List<String> getMineralStructures() {
-        return new ArrayList<String>(mineralStructures.keySet());
+
+    public static List<StructureManager> getStructures() {
+        return new ArrayList<StructureManager>(allStructures.values());
     }
-    public static List<String> getStructureStructures() {
-        return new ArrayList<String>(structureStructures.keySet());
+    public static List<StructureManager> getShoreStructures() {
+        return new ArrayList<StructureManager>(shoreStructures.values());
     }
-    public static List<String> getAnimalStructures() {
-        return new ArrayList<String>(animalStructures.keySet());
+    public static List<StructureManager> getInlandStructures() {
+        return new ArrayList<StructureManager>(inlandStructures.values());
+    }
+
+    public static List<StructureManager> getWoodStructures() {
+        return new ArrayList<StructureManager>(woodStructures.values());
+    }
+    public static List<StructureManager> getMineralStructures() {
+        return new ArrayList<StructureManager>(mineralStructures.values());
+    }
+    public static List<StructureManager> getBuildingStructures() {
+        return new ArrayList<StructureManager>(structureStructures.values());
+    }
+    public static List<StructureManager> getAnimalStructures() {
+        return new ArrayList<StructureManager>(animalStructures.values());
     }
 
     private final File ymlFile;
@@ -179,38 +215,40 @@ public class StructureManager {
     private final SettingsManager configManager;
 
     private final String name;
+    private final String namespace;
 
-    public StructureManager(String ymlName)
+    public StructureManager(String namespace, StructureTypeEnum section, String ymlName)
     {
 
-        this.ymlFile = new File(TitanIslands.tiFilePath,  File.separator + "structures" +  File.separator + ymlName + ".yml");
-        String jarYmlFile = "/defaults/structures/" + ymlName + ".yml";
+        this.ymlFile = new File(TitanIslands.tiFilePath,  File.separator + "structures" +  File.separator + namespace +  File.separator + section.getName() +  File.separator + ymlName + ".yml");
+        String jarYmlFile = "/defaults/structures/" + namespace + "/" + section.getName() + "/" + ymlName + ".yml";
 
         configManager = new SettingsManager(ymlFile);
         String nbtName = configManager.getString("filename");
-
-        this.nbtFile = new File(TitanIslands.tiFilePath, File.separator + "structures" + File.separator + nbtName + ".nbt");
-        String jarNbtFile = "/defaults/structures/" + nbtName + ".nbt";
+        this.nbtFile = new File(TitanIslands.tiFilePath, File.separator + "structures" +  File.separator + namespace +  File.separator + section.getName() +  File.separator + nbtName + ".nbt");
+        String jarNbtFile = "/defaults/structures/"  + namespace + "/" + section.getName() + "/"  + nbtName + ".nbt";
 
         name = ymlName.toLowerCase().replace(" ", "");
-
-        allStructures.put(this.getName(), this);
-        if (!structureData.contains(this.getName()))
+        this.namespace = namespace;
+        String key = namespace + ":" + section.getName() + ":" + this.getName();
+        oldNamingStructures.put(this.getName(), this);
+        allStructures.put(key, this);
+        if (!structureData.contains(key))
         {
-            structureData.set(this.getName() + ".count", 0);
+            structureData.set(key + ".count", 0);
         }
 
-        String type = configManager.getString("type");
-        if (type.equalsIgnoreCase("shore")) shoreStructures.put(this.getName(), this);
-        if (type.equalsIgnoreCase("inland")) inlandStructures.put(this.getName(), this);
-        if (type.equalsIgnoreCase("mineral")) mineralStructures.put(this.getName(), this);
-        if (type.equalsIgnoreCase("structure")) structureStructures.put(this.getName(), this);
-        if (type.equalsIgnoreCase("animal")) animalStructures.put(this.getName(), this);
-        if (type.equalsIgnoreCase("wood")) woodStructures.put(this.getName(), this);
+        String type = section.getName();
+        if (section == StructureTypeEnum.SHORE) shoreStructures.put(key, this);
+        if (section == StructureTypeEnum.INLAND) inlandStructures.put(key, this);
+        if (section == StructureTypeEnum.MINERAL) mineralStructures.put(key, this);
+        if (section == StructureTypeEnum.BUILDING) structureStructures.put(key, this);
+        if (section == StructureTypeEnum.ANIMAL) animalStructures.put(key, this);
+        if (section == StructureTypeEnum.WOOD) woodStructures.put(key, this);
 
         configManager.save();
         InputStream stream = getClass().getResourceAsStream(jarYmlFile);
-         if (stream != null)
+        if (namespace.equalsIgnoreCase("titanislands") && stream != null)
         {
             if (this.isAutoUpdate()) {
                 SettingsManager settingsManager = new SettingsManager(stream);
@@ -239,15 +277,19 @@ public class StructureManager {
         }
 
     }
+
+    public String getNamespace() {
+        return namespace;
+    }
     public CubeManager getPreBuild(Location location, int height)
     {
-        Location finalLocation = StructureManager.getAdjustedPlacement(location, getName(), height);
+        Location finalLocation = StructureManager.getAdjustedPlacement(location, this, height);
         return StructureManager.getPreBuild(finalLocation, this.nbtFile);
     }
 
     public CubeManager build(Location location, int height)
     {
-        Location finalLocation = StructureManager.getAdjustedPlacement(location, getName(), height);
+        Location finalLocation = StructureManager.getAdjustedPlacement(location, this, height);
         return StructureManager.build(finalLocation, this.nbtFile, StructureRotation.NONE);
     }
     public int getCost()
