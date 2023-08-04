@@ -25,7 +25,7 @@ public enum StructureTypeEnum {
                 return value;
             }
         }
-        return StructureTypeEnum.INLAND;
+        return null;
     }
 
 }

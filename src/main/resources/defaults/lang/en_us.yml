@@ -38,6 +38,7 @@ announce: "&aA new islands has spawned at: &f"
 removed: "&aA old island has been lost to the ticking clock of time."
 home_set: "&aYour home has been set."
 done: "&aDone!"
+compass_set: "&aCompess set to: &f"
 blocks: " Blocks"
 count: "&aNumber of islands: &f"
 friends:

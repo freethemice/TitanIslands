@@ -1,7 +1,9 @@
 package com.firesoftitan.play.titanbox.islands.guis;
 
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
+import com.firesoftitan.play.titanbox.islands.managers.IslandManager;
 import com.firesoftitan.play.titanbox.islands.managers.LangManager;
+import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -9,12 +11,13 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 public class CompassGui {
     private static final HashMap<UUID, CompassGui> activeGuis = new HashMap<UUID, CompassGui>();
     private final Inventory myGui;
-    private final int size;
+    private final int size = 9*6;//54
     private Player viewer;
     public static String guiName = LangManager.instants.getMessage("gui.compass.title");
     public static CompassGui getGui(Player player)
@@ -25,7 +28,6 @@ public class CompassGui {
         return null;
     }
     public CompassGui(Player player) {
-        this.size = 9;
         myGui = Bukkit.createInventory(null, size, guiName);
         this.viewer = player;
     }
@@ -96,7 +98,19 @@ public class CompassGui {
         button = TitanIslands.tools.getNBTTool().set(button, "buttonaction", "random");
         myGui.setItem(slot, button.clone());
         //slot++;
+        slot = 9;
+        List<IslandManager> islands = PlayerManager.getClaims(viewer);
+        for(IslandManager islandManager: islands)
+        {
+            button = getCustomButton("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODA4YWM1ZTI4ZGJkZmEyMjUwYzYwMjg3Njg2ZGIxNGNjYmViNzc2YzNmMDg2N2M5NTU1YjdlNDk1NmVmYmE3NyJ9fX0=");
+            button = TitanIslands.tools.getItemStackTool().changeName(button, "Your island " + islandManager.getFragments().size());
+            button = TitanIslands.tools.getNBTTool().set(button, "buttonaction", "location");
+            button = TitanIslands.tools.getNBTTool().set(button, "location", islandManager.getCenter().clone());
 
+            myGui.setItem(slot, button.clone());
+            slot++;
+            if (slot >= size) break;
+        }
     }
 
     public boolean isGuiOpen()

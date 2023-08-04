@@ -52,11 +52,11 @@ settings:
       col: 5 #the number of structures in the col multiplied by
       row: 5 #the number of structures in the row, equals the total number a player gets on his island
     structures: #Structure(s) player will start off with, the max amount determined by (col - 2) * (row - 2), example (5-2)*(5-2)=9
-      - oak
-      - oak
-      - starter
-      - oak
-      - oak
-      - stone
-      - stone
-      - coal
+      - primary:wood:oak
+      - primary:wood:oak
+      - primary:building:starter
+      - primary:wood:oak
+      - primary:inland:grass
+      - primary:inland:stone
+      - primary:inland:stone
+      - primary:mineral:coal

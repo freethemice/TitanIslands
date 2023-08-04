@@ -36,8 +36,8 @@ public class CompassGUIListener  implements Listener
             if (gui != null)
             {
                 Player player = (Player)whoClicked;
-                ItemStack clicked = event.getInventory().getItem(event.getSlot());
                 if (event.getSlot() > -1 && event.getSlot() < gui.getSize()) {
+                    ItemStack clicked = event.getInventory().getItem(event.getSlot());
                     if (!TitanIslands.tools.getItemStackTool().isEmpty(clicked)) {
                         if (TitanIslands.tools.getNBTTool().containsKey(clicked, "buttonaction")) {
                             String action = TitanIslands.tools.getNBTTool().getString(clicked, "buttonaction");
@@ -48,36 +48,40 @@ public class CompassGUIListener  implements Listener
                                         CompassRunnable.instance.remove(player);
                                         return;
                                     }
-                                    case "home" -> compassTarget = PlayerManager.instants.getHome(player);
+                                    case "home" -> compassTarget = PlayerManager.getHome(player);
                                     case "closest" -> {
                                         IslandManager closestExcluding = IslandManager.getClosestExcluding(player.getLocation(), player);
                                         if (closestExcluding != null) {
-                                            compassTarget = closestExcluding.getLocation();
+                                            compassTarget = closestExcluding.getCenter();
                                         }
                                     }
                                     case "newest" -> {
                                         IslandManager earliest = IslandManager.getNewest();
                                         if (earliest != null) {
-                                            compassTarget = earliest.getLocation();
+                                            compassTarget = earliest.getCenter();
                                         }
                                     }
                                     case "random" -> {
                                         IslandManager randomExcluding = IslandManager.getRandomExcluding(player);
                                         if (randomExcluding != null) {
-                                            compassTarget = randomExcluding.getLocation();
+                                            compassTarget = randomExcluding.getCenter();
                                         }
+                                    }
+                                    case "location" -> {
+                                        Location location = TitanIslands.tools.getNBTTool().getLocation(clicked, "location");
+                                        compassTarget = location.clone();
                                     }
                                 }
                                 if (compassTarget != null)
                                 {
-                                    if (!CompassRunnable.instance.hasCompass(player)) CompassRunnable.instance.add(player, PlayerManager.instants.getHome(player));
+                                    if (!CompassRunnable.instance.hasCompass(player)) CompassRunnable.instance.add(player, PlayerManager.getHome(player));
                                     CompassRunnable.instance.changeLocation(player, compassTarget);
-                                    player.sendMessage(LangManager.instants.getMessage("done"));
+                                    player.sendMessage(LangManager.instants.getMessage("compass_set") + compassTarget.getBlockX() + ", " + compassTarget.getBlockZ());
                                     player.closeInventory();
                                 }
                                 else
                                 {
-                                    player.sendMessage(LangManager.instants.getMessage("error.nostructer"));
+                                    player.sendMessage(LangManager.instants.getMessage("error.no_structure"));
                                     player.closeInventory();
                                 }
 

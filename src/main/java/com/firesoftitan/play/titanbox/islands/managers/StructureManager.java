@@ -73,7 +73,7 @@ public class StructureManager {
             runningProduct *= 1 - oddProbability;
             if (randomFloat < runningProduct) {
                 String[] split = name.split(":");
-                StructureManager structure = StructureManager.getStructure(split[0], StructureTypeEnum.getType(split[1]), split[2]);
+                StructureManager structure = StructureManager.getStructure(split[0], Objects.requireNonNull(StructureTypeEnum.getType(split[1])), split[2]);
                 if (structure != null) {
                     return structure;
                 }
@@ -82,7 +82,7 @@ public class StructureManager {
         // Pick random structure if running product approach does not work
         String randomKey = (String) nameToOdds.keySet().toArray()[random.nextInt(nameToOdds.size())];
         String[] split = randomKey.split(":");
-        return StructureManager.getStructure(split[0], StructureTypeEnum.getType(split[1]), split[2]);
+        return StructureManager.getStructure(split[0], Objects.requireNonNull(StructureTypeEnum.getType(split[1])), split[2]);
     }
 
     private static Structure load(File section)
@@ -135,6 +135,7 @@ public class StructureManager {
     }
     private static FragmentManager build(Location location, Structure structure, StructureRotation rotation, float all)
     {
+
         structure.place(location,true, rotation, Mirror.NONE, -1, all, new Random());
         BlockVector size = structure.getSize();
         Location location1 = new Location(location.getWorld(), location.getBlockX() + size.getBlockX(), location.getBlockY() + size.getBlockY(), location.getBlockZ() + size.getBlockZ());
@@ -152,7 +153,8 @@ public class StructureManager {
         return allStructures.get(key);
     }
     public static StructureManager getStructure(String namespace, String section, String name) {
-        return getStructure(namespace, StructureTypeEnum.getType(section), name);
+        StructureTypeEnum type = Objects.requireNonNull(StructureTypeEnum.getType(section));
+        return getStructure(namespace, type, name);
     }
     public static StructureManager getStructure(String namespace, StructureTypeEnum section, String name) {
         String key = namespace + ":" + section.getName() + ":" + name;
@@ -212,6 +214,8 @@ public class StructureManager {
     private final SettingsManager configManager;
 
     private final String name;
+
+    private final StructureTypeEnum type;
     private final String namespace;
 
     public StructureManager(String namespace, StructureTypeEnum section, String ymlName)
@@ -234,7 +238,7 @@ public class StructureManager {
             structureData.set(key + ".count", 0);
         }
 
-        String type = section.getName();
+        type = section;
         if (section == StructureTypeEnum.SHORE) shoreStructures.put(key, this);
         if (section == StructureTypeEnum.INLAND) inlandStructures.put(key, this);
         if (section == StructureTypeEnum.MINERAL) mineralStructures.put(key, this);
@@ -303,8 +307,7 @@ public class StructureManager {
 
     public StructureTypeEnum getType()
     {
-        String type = configManager.getString("type").toLowerCase();
-        return StructureTypeEnum.getType(type);
+        return type;
     }
     public int getOdds()
     {

@@ -44,7 +44,7 @@ public class FragmentManager {
         if (fragmentManager == null) {
             return;
         }
-        UUID owner = PlayerManager.instants.getOwner(fragmentManager);
+        UUID owner = PlayerManager.getOwner(fragmentManager);
         Location firstCorner = fragmentManager.getCenter();
         String emptyType = "water";
         if (ConfigManager.getInstants().getType().equalsIgnoreCase("air")) emptyType = "air";
@@ -127,7 +127,7 @@ public class FragmentManager {
     {
         List<FragmentManager> fragments = new ArrayList<>(FragmentManager.fragments.values());
 
-        fragments.removeIf(selector -> PlayerManager.instants.isOwnedByPlayer(player, selector));
+        fragments.removeIf(selector -> PlayerManager.isOwnedByPlayer(player, selector));
 
         if(fragments.isEmpty()) return null;
 
@@ -139,7 +139,7 @@ public class FragmentManager {
     public static FragmentManager getClosestExcluding(Location location, Player player)
     {
         List<FragmentManager> fragments = new ArrayList<>(FragmentManager.fragments.values());
-        fragments.removeIf(selector -> PlayerManager.instants.isOwnedByPlayer(player, selector));
+        fragments.removeIf(selector -> PlayerManager.isOwnedByPlayer(player, selector));
         if(fragments.isEmpty()) return null;
         return fragments.stream().min(Comparator.comparingDouble(fragment -> fragment.getCenter().distance(location))).orElse(null);
     }
@@ -250,7 +250,7 @@ public class FragmentManager {
 
     public UUID getOwner()
     {
-        return PlayerManager.instants.getOwner(this);
+        return PlayerManager.getOwner(this);
     }
     public UUID getId() {
         return id;

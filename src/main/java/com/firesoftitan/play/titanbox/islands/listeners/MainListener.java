@@ -71,9 +71,9 @@ public class MainListener implements Listener {
                     StructureManager structure = StructureManager.getStructure(fragment.getNamespace(), fragment.getType(), fragment.getName());
                     if (structure != null) {
                         String name = fragment.getName();
-                        boolean unlocked = playerManager.isUnlocked(player, structure);
+                        boolean unlocked = PlayerManager.isUnlocked(player, structure);
                         if (!unlocked && !name.equalsIgnoreCase("water") && !name.equalsIgnoreCase("air")) {
-                            playerManager.unlock(player, structure);
+                            PlayerManager.unlock(player, structure);
                             messageTool.sendMessagePlayer(player, LangManager.instants.getMessage("unlocked") + structure.getTitle());
                             int personalLimit = structure.getPersonalLimit();
                             String txtAmount = String.valueOf(personalLimit);
@@ -110,7 +110,7 @@ public class MainListener implements Listener {
     public void onPlayerJoinEvent(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        if (!playerManager.hasPlayerJoinedBefore(player))
+        if (!PlayerManager.hasPlayerJoinedBefore(player))
         {
             World world = configManager.getWorld();
             Random random = new Random(System.currentTimeMillis());
@@ -132,7 +132,7 @@ public class MainListener implements Listener {
                 @Override
                 public void run() {
                     Location location2 = new Location(world, location.getBlockX(), world.getHighestBlockYAt(location) + 2, location.getBlockZ());
-                    playerManager.setHome(player, location2.clone());
+                    PlayerManager.setHome(player, location2.clone());
 
                     player.teleport(location2.clone());
                     for(int i = 0; i < 100; i++)
@@ -145,7 +145,7 @@ public class MainListener implements Listener {
             String emptyType = "empty";
             if (ConfigManager.getInstants().getType().equalsIgnoreCase("air")) emptyType = "empty_air";
             StructureManager structure = StructureManager.getStructure("primary", StructureTypeEnum.INLAND, emptyType);
-            playerManager.unlock(player, structure);
+            PlayerManager.unlock(player, structure);
             IslandManager.generateIsland(player, location);
 
         }

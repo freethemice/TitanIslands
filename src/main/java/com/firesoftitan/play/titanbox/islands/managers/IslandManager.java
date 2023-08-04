@@ -126,7 +126,6 @@ public class IslandManager {
         if (islandWidth > 5 && islandHeight > 5) structure = true;
         String woodType = getWoodTypeKey();
 
-
         for (int row = 0; row < islandWidth; row++) {
             for (int col = 0; col < islandHeight; col++) {
                 double randomValue = islandNoise[row][col];
@@ -140,8 +139,9 @@ public class IslandManager {
                 }
                 else {
                     List<String> correctedList = new ArrayList<String>(inlandWords);
-                    if (animals && random.nextDouble() > 0.4D) correctedList.addAll(animalWords);
-                    if (structure && random.nextDouble() > 0.2D) correctedList.addAll(buildinglWords);
+                    if (animals && random.nextDouble() < 0.6D) correctedList.addAll(animalWords);
+                    if (structure && random.nextDouble() < 0.4D) correctedList.addAll(buildinglWords);
+
                     selectedWord = getRandomWordFromList(correctedList, randomValue, info);
                 }
                 if (selectedWord != null) {
@@ -372,7 +372,7 @@ public class IslandManager {
     {
         List<IslandManager> islandManagers = new ArrayList<>(IslandManager.islands.values());
 
-        islandManagers.removeIf(selector -> PlayerManager.instants.isOwnedByPlayer(player, selector));
+        islandManagers.removeIf(selector -> PlayerManager.isOwnedByPlayer(player, selector));
 
         if(islandManagers.isEmpty()) return null;
 
@@ -384,9 +384,9 @@ public class IslandManager {
     public static IslandManager getClosestExcluding(Location location, Player player)
     {
         List<IslandManager> islandManagers = new ArrayList<>(IslandManager.islands.values());
-        islandManagers.removeIf(selector -> PlayerManager.instants.isOwnedByPlayer(player, selector));
+        islandManagers.removeIf(selector -> PlayerManager.isOwnedByPlayer(player, selector));
         if(islandManagers.isEmpty()) return null;
-        return islandManagers.stream().min(Comparator.comparingDouble(island -> island.getLocation().distance(location))).orElse(null);
+        return islandManagers.stream().min(Comparator.comparingDouble(island -> island.getCenter().distance(location))).orElse(null);
     }
     public static List<IslandManager> getSurrounding(Location location)
     {
@@ -525,7 +525,7 @@ public class IslandManager {
 
     public UUID getOwner()
     {
-        return PlayerManager.instants.getOwner(this);
+        return PlayerManager.getOwner(this);
     }
     public IslandManager(SaveManager saveManager) {
         this.id = saveManager.getUUID("id");

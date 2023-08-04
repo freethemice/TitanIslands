@@ -3,12 +3,14 @@ package com.firesoftitan.play.titanbox.islands.runnables;
 import com.firesoftitan.play.titanbox.islands.enums.StructureTypeEnum;
 import com.firesoftitan.play.titanbox.islands.managers.FragmentManager;
 import com.firesoftitan.play.titanbox.islands.managers.IslandManager;
+import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
 import com.firesoftitan.play.titanbox.islands.managers.StructureManager;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import static com.firesoftitan.play.titanbox.islands.TitanIslands.playerManager;
+import java.util.Objects;
+
 
 public class IslandMakerRunnable extends BukkitRunnable {
     private final Location location;
@@ -24,7 +26,7 @@ public class IslandMakerRunnable extends BukkitRunnable {
         this.location = location.clone();
         this.island = island;
         this.islandManager = new IslandManager();
-        if (player != null) playerManager.add(player, this.islandManager);
+        if (player != null) PlayerManager.add(player, this.islandManager);
     }
 
     @Override
@@ -33,7 +35,8 @@ public class IslandMakerRunnable extends BukkitRunnable {
 
         Location updatedLocation = location.clone().add(col*width, 0, row*height);
         String[] split = iKey.split(":");
-        StructureManager structure = StructureManager.getStructure(split[0], StructureTypeEnum.getType(split[1]), split[2]);
+        StructureTypeEnum section = Objects.requireNonNull(StructureTypeEnum.getType(split[1]));
+        StructureManager structure = StructureManager.getStructure(split[0], section, split[2]);
         Location check = FragmentManager.adjustLocation(structure, updatedLocation);
 
         FragmentManager build = structure.build(check, islandManager.getHeight());
@@ -41,7 +44,7 @@ public class IslandMakerRunnable extends BukkitRunnable {
             if (row == 0) width = build.getWidth();
             height = build.getDepth();
             build.place(islandManager, structure);
-            if (player != null) playerManager.add(player, build);
+            if (player != null) PlayerManager.add(player, build);
         }
         col++;
         if (col >= island[0].length)

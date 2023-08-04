@@ -1,7 +1,13 @@
 package com.firesoftitan.play.titanbox.islands.runnables;
 
 import com.firesoftitan.play.titanbox.islands.TitanIslands;
-import com.firesoftitan.play.titanbox.islands.managers.*;
+import com.firesoftitan.play.titanbox.islands.managers.ConfigManager;
+import com.firesoftitan.play.titanbox.islands.managers.IslandManager;
+import com.firesoftitan.play.titanbox.islands.managers.LangManager;
+import com.firesoftitan.play.titanbox.islands.managers.PlayerManager;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -23,7 +29,7 @@ public class IslandSpawnerRunnable extends BukkitRunnable {
 
     @Override
     public void run() {
-        List<Location> homes = PlayerManager.instants.getHomes();
+        List<Location> homes = PlayerManager.getHomes();
         List<Player> playerList = new ArrayList<Player>(Bukkit.getOnlinePlayers());
         if (!playerList.isEmpty())
         {
@@ -84,8 +90,14 @@ public class IslandSpawnerRunnable extends BukkitRunnable {
             List<Player> playerList = new ArrayList<Player>(Bukkit.getOnlinePlayers());
             if (!playerList.isEmpty()) {
                 for (Player playerA : playerList) {
+                    // Send clickable link text
+                    TextComponent message = new TextComponent(LangManager.instants.getMessage("announce") + randomLoc.getBlockX() + ", " + randomLoc.getBlockZ());
+                    ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/cp set " + randomLoc.getBlockX() + " " + randomLoc.getBlockZ());
+                    message.setClickEvent(clickEvent);
+
+                    playerA.spigot().sendMessage(ChatMessageType.CHAT, message);
                     playerA.playSound(playerA.getLocation(), Sound.BLOCK_ANVIL_PLACE, 1, 1);
-                    playerA.sendMessage(LangManager.instants.getMessage("announce") + randomLoc.getBlockX() + ", " + randomLoc.getBlockZ());
+                   // playerA.sendMessage(LangManager.instants.getMessage("announce") + randomLoc.getBlockX() + ", " + randomLoc.getBlockZ());
                 }
             }
         }

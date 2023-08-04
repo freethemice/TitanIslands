@@ -59,9 +59,9 @@ public class TabCompleteListener implements TabCompleter {
 
             if (args[0].equalsIgnoreCase("replace") || args[0].equalsIgnoreCase("add"))
             {
-                //List<String> unlocked = TitanIslands.playerManager.getUnlocked((Player) commandSender);
+                //List<String> unlocked = TitanIslands.PlayerManager.getUnlocked((Player) commandSender);
                 //commands.addAll(unlocked);
-                for (String key : PlayerManager.instants.getUnlocked((Player) commandSender)) {
+                for (String key : PlayerManager.getUnlocked((Player) commandSender)) {
                     String nameKey = key.split(":")[0];
                     if (!commands.contains(nameKey)) commands.add(nameKey);
                 }
@@ -70,7 +70,7 @@ public class TabCompleteListener implements TabCompleter {
         if (args.length == 3)
         {
             if (args[0].equalsIgnoreCase("replace") || args[0].equalsIgnoreCase("add") ) {
-                for (String key : PlayerManager.instants.getUnlocked((Player) commandSender, args[1])) {
+                for (String key : PlayerManager.getUnlocked((Player) commandSender, args[1])) {
                     String nameKey = key.split(":")[1];
                     if (!commands.contains(nameKey)) commands.add(nameKey);
                 }
@@ -90,7 +90,7 @@ public class TabCompleteListener implements TabCompleter {
                     return null;
                 }
                 if (args[1].equalsIgnoreCase("remove")) {
-                    Location home = PlayerManager.instants.getHome((Player) commandSender);
+                    Location home = PlayerManager.getHome((Player) commandSender);
                     if (home != null) {
                         IslandManager islandManager = IslandManager.getIsland(home);
                         if (islandManager != null) {
@@ -125,7 +125,7 @@ public class TabCompleteListener implements TabCompleter {
 
             if (args[0].equalsIgnoreCase("build"))
             {
-                StructureTypeEnum type = StructureTypeEnum.getType(args[2]);
+                StructureTypeEnum type = Objects.requireNonNull(StructureTypeEnum.getType(args[2]));
                 for(StructureManager key: StructureManager.getStructures(args[1], type))
                 {
                     commands.add(key.getName());
@@ -134,7 +134,7 @@ public class TabCompleteListener implements TabCompleter {
             if (args[0].equalsIgnoreCase("replace") || args[0].equalsIgnoreCase("add") )
             {
                 StructureTypeEnum type = StructureTypeEnum.getType(args[2]);
-                for(String key: PlayerManager.instants.getUnlocked((Player) commandSender, args[1], type))
+                for(String key: PlayerManager.getUnlocked((Player) commandSender, args[1], type))
                 {
                     commands.add(key.split(":")[2]);
                 }
@@ -142,7 +142,7 @@ public class TabCompleteListener implements TabCompleter {
 
             if (args[0].equalsIgnoreCase("count")) {
                 if (args[1].equalsIgnoreCase("set") || args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("remove") || args[1].equalsIgnoreCase("get")) {
-                    List<StructureManager> countList = PlayerManager.instants.getCountList(((Player) commandSender));
+                    List<StructureManager> countList = PlayerManager.getCountList(((Player) commandSender));
                     for (StructureManager key: countList) {
                         commands.add(key.getNamespace());
                     }
@@ -153,9 +153,9 @@ public class TabCompleteListener implements TabCompleter {
         {
             if (args[0].equalsIgnoreCase("unlock"))
             {
-                StructureTypeEnum type = StructureTypeEnum.getType(args[3]);
+                StructureTypeEnum type = Objects.requireNonNull(StructureTypeEnum.getType(args[3]));
                 List<StructureManager> unlocked = StructureManager.getStructures(args[2], type);
-                List<StructureManager> countList = PlayerManager.instants.getCountList(((Player) commandSender));
+                List<StructureManager> countList = PlayerManager.getCountList(((Player) commandSender));
                 unlocked.removeAll(countList);
 
                 for(StructureManager key: unlocked) {
@@ -164,7 +164,7 @@ public class TabCompleteListener implements TabCompleter {
             }
             if (args[0].equalsIgnoreCase("count")) {
                 if (args[1].equalsIgnoreCase("set") || args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("remove") || args[1].equalsIgnoreCase("get")) {
-                    List<StructureManager> countList = PlayerManager.instants.getCountList(((Player) commandSender));
+                    List<StructureManager> countList = PlayerManager.getCountList(((Player) commandSender));
                     for (StructureManager key: countList) {
                         if (key.getNamespace().equalsIgnoreCase(args[3])) {
                             commands.add(key.getType().getName());
@@ -176,7 +176,7 @@ public class TabCompleteListener implements TabCompleter {
         if (args.length == 6) {
             if (args[0].equalsIgnoreCase("count")) {
                 if (args[1].equalsIgnoreCase("set") || args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("remove") || args[1].equalsIgnoreCase("get")) {
-                    List<StructureManager> countList = PlayerManager.instants.getCountList(((Player) commandSender));
+                    List<StructureManager> countList = PlayerManager.getCountList(((Player) commandSender));
                     for (StructureManager key : countList) {
                         if (key.getNamespace().equals(args[3]) && key.getType().getName().equals(args[4])) {
                             commands.add(key.getName());

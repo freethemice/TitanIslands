@@ -148,7 +148,7 @@ public class ProtectionListener  implements Listener {
             {
                 return;
             }
-            UUID owner = PlayerManager.instants.getOwner(fragmentA);
+            UUID owner = PlayerManager.getOwner(fragmentA);
             if (owner == null && !configManager.isProtection_not_owned_creepers()) {
                 event.setCancelled(true);
             } else {
@@ -189,8 +189,8 @@ public class ProtectionListener  implements Listener {
         if (fragmentA == null && fragmentB != null) return false;
         if (fragmentA != null && fragmentB == null) return false;
         if (fragmentA == null && fragmentB == null) return configManager.isProtection_wild_break();
-        UUID ownerA = PlayerManager.instants.getOwner(fragmentA);
-        UUID ownerB = PlayerManager.instants.getOwner(fragmentB);
+        UUID ownerA = PlayerManager.getOwner(fragmentA);
+        UUID ownerB = PlayerManager.getOwner(fragmentB);
         if (ownerA == null && ownerB == null) return true;
         if (ownerA == null || ownerB == null) return false;
         return ownerA.equals(ownerB);
@@ -200,7 +200,7 @@ public class ProtectionListener  implements Listener {
         if (!Objects.requireNonNull(location.getWorld()).getName().equals(ConfigManager.getInstants().getWorld().getName())) return false;
         FragmentManager fragment = FragmentManager.getFragment(location);
         if (fragment == null) return configManager.isProtection_wild_break(); //stop player from building in the wild
-        UUID owner = PlayerManager.instants.getOwner(fragment);
+        UUID owner = PlayerManager.getOwner(fragment);
         if (owner == null) return configManager.isProtection_not_owned_break();
         return true;
     }
@@ -229,7 +229,7 @@ public class ProtectionListener  implements Listener {
             }
         }
 
-        UUID ownedByPlayer = PlayerManager.instants.getOwner(fragment);
+        UUID ownedByPlayer = PlayerManager.getOwner(fragment);
 
         if (ownedByPlayer == null) {
             if (action == ProtectionEnum.BREAK) {
