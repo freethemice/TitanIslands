@@ -140,6 +140,7 @@ public class MainListener implements Listener {
                         if (LangManager.instants.contains("welcome.line_" + i))
                             player.sendMessage(LangManager.instants.getMessage("welcome.line_" + i));
                     }
+                    player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                 }
             }.runTaskLater(instance, 10);
             String emptyType = "empty";

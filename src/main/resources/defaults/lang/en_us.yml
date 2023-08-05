@@ -1,3 +1,4 @@
+version: "080523"
 error:
   understand: "&4I don't understand the command."
   default_file: "&4Failed to get the default file: "
@@ -46,6 +47,14 @@ friends:
   not_online: "&4Player must be online!"
   removed: "&aYour friend has been removed from your island."
 gui:
+  island:
+    title: "Island Top"
+    line_a: "&aIsland Value: "
+    line_b: "&7Click to set compass to island"
+  fragments:
+    title: "Unlocked Fragments Top"
+    line_a: "&aUnlocked Fragments: "
+    line_b: "&7Click to set compass to island"
   compass:
     title: "Compass Settings"
     none: "&aHide Compass"
@@ -55,8 +64,9 @@ gui:
     random: "&aRandom"
 welcome:
   line_0: "&aWelcome to Titan Islands, this island is your very own island!"
-  line_1: "&aWhen you explore and find new island you will unlock that"
-  line_2: "&aisland, letting you build and expand your island "
+  line_1: "&aWhen you explore and find new island you will unlock island"
+  line_2: "&afragments, letting you build and expand your island "
   line_3: "&ausing the command, &f/is add"
   line_4: "&aIf you need help use the command, &f/is"
   line_5: "&aTo find your way around use, &f/compass &aor &f/cp"
+  line_6: "&aTo claim a new island use &f/is claim"

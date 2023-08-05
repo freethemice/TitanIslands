@@ -34,7 +34,7 @@ public class IslandRemoverRunnable extends BukkitRunnable {
 
     @Override
     public void run() {
-        if (fragments.isEmpty()) {
+        if (fragments == null || fragments.isEmpty()) {
             if (ConfigManager.getInstants().getDecay() < 1) return;
             oldest = IslandManager.getOldest(true);
             if (System.currentTimeMillis() - oldest.getCreatedTime() > ConfigManager.getInstants().getDecay() * 1000L) {

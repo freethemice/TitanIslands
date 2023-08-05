@@ -20,7 +20,7 @@ import java.util.*;
 
 public class TabCompleteListener implements TabCompleter {
     private static final String[] ADMIN_COMMANDS = {"spawn", "build", "admin", "delete", "count", "unlock"};
-    private static final String[] NON_ADMIN_COMMANDS = {"home", "add", "sethome", "total", "info", "friends", "remove", "replace", "claim", "abandon"};
+    private static final String[] NON_ADMIN_COMMANDS = {"top", "home", "add", "sethome", "total", "info", "friends", "remove", "replace", "claim", "abandon"};
     private final List<String> pluginNames = new ArrayList<String>();
     @Nullable
     @Override
@@ -34,6 +34,11 @@ public class TabCompleteListener implements TabCompleter {
 
         }
         if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("top"))
+            {
+                commands.add("fragments");
+                commands.add("island");
+            }
             if (args[0].equalsIgnoreCase("count"))
             {
                 commands.add("add");

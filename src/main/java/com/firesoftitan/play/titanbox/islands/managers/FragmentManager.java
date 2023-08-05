@@ -282,7 +282,10 @@ public class FragmentManager {
         if (this.islandManager != null) saveManager.set("island.id", this.islandManager.getId());
         return saveManager;
     }
-
+    public StructureManager getStructure()
+    {
+        return StructureManager.getStructure(this.namespace, this.section, this.name);
+    }
     public StructureTypeEnum getType() {
         return section;
     }

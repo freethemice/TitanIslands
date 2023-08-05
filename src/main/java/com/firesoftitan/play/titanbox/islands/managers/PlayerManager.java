@@ -107,6 +107,16 @@ public class PlayerManager {
         return stringList.contains(structureManager.getNamespace() + ":" + structureManager.getType().getName() + ":" + structureManager.getName());
 
     }
+    public static List<UUID> getPlayers()
+    {
+        Set<String> keys = playerData.getKeys();
+        List<UUID> uuids = new ArrayList<UUID>();
+        for (String s: keys)
+        {
+            uuids.add(UUID.fromString(s));
+        }
+        return uuids;
+    }
     public static List<String> getUnlocked(Player player, String namespace)
     {
         List<String> stringList = playerData.getStringList(player.getUniqueId() + ".unlocked");
@@ -130,20 +140,27 @@ public class PlayerManager {
         }
         return out;
     }
-
-    public static List<String> getUnlocked(Player player)
+    public static List<String> getUnlocked(UUID uuid)
     {
-        List<String> stringList = playerData.getStringList(player.getUniqueId() + ".unlocked");
+        List<String> stringList = playerData.getStringList(uuid + ".unlocked");
         if (stringList == null) stringList = new ArrayList<String>();
         return stringList;
+    }
+    public static List<String> getUnlocked(Player player)
+    {
+        return getUnlocked(player.getUniqueId());
     }
     public static void setHome(Player player, Location location)
     {
         playerData.set(player.getUniqueId() + ".home", location);
     }
+    public static Location getHome(UUID uuid)
+    {
+        return playerData.getLocation(uuid + ".home");
+    }
     public static Location getHome(Player player)
     {
-        return playerData.getLocation(player.getUniqueId() + ".home");
+        return getHome(player.getUniqueId());
     }
     public static List<Location> getHomes()
     {

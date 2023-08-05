@@ -3,10 +3,9 @@ package com.firesoftitan.play.titanbox.islands;
 import com.firesoftitan.play.titanbox.islands.enums.StructureTypeEnum;
 import com.firesoftitan.play.titanbox.islands.guis.CompassGui;
 import com.firesoftitan.play.titanbox.islands.guis.ConfirmationDialog;
-import com.firesoftitan.play.titanbox.islands.listeners.CompassGUIListener;
-import com.firesoftitan.play.titanbox.islands.listeners.MainListener;
-import com.firesoftitan.play.titanbox.islands.listeners.ProtectionListener;
-import com.firesoftitan.play.titanbox.islands.listeners.TabCompleteListener;
+import com.firesoftitan.play.titanbox.islands.guis.FragmentsTopGui;
+import com.firesoftitan.play.titanbox.islands.guis.IslandTopGui;
+import com.firesoftitan.play.titanbox.islands.listeners.*;
 import com.firesoftitan.play.titanbox.islands.managers.*;
 import com.firesoftitan.play.titanbox.islands.runnables.CompassRunnable;
 import com.firesoftitan.play.titanbox.islands.runnables.IslandRemoverRunnable;
@@ -52,6 +51,10 @@ public class TitanIslands extends JavaPlugin {
         protectionListener.registerEvents();
         CompassGUIListener compassGUIListener = new CompassGUIListener();
         compassGUIListener.registerEvents();
+        FragmentsTopGUIListener fragmentsTopGUIListener = new FragmentsTopGUIListener();
+        fragmentsTopGUIListener.registerEvents();
+        IslandTopGUIListener islandTopGUIListener = new IslandTopGUIListener();
+        islandTopGUIListener.registerEvents();
         saveDefaultFiles();
         configManager = new ConfigManager();
         new LangManager(configManager.getLanguage());
@@ -209,6 +212,18 @@ public class TitanIslands extends JavaPlugin {
             }
             if (label.equalsIgnoreCase("tis") || label.equalsIgnoreCase("island") || label.equalsIgnoreCase("is")) {
                 if (args.length > 0) {
+                    if (args[0].equalsIgnoreCase("top") && sender instanceof Player)
+                    {
+                        if (args[1].equalsIgnoreCase("fragments")) {
+                            FragmentsTopGui fragmentsTopGui = new FragmentsTopGui((Player) sender);
+                            fragmentsTopGui.showGUI();
+                        }
+                        if (args[1].equalsIgnoreCase("island")) {
+                            IslandTopGui islandTopGui = new IslandTopGui((Player) sender);
+                            islandTopGui.showGUI();
+                        }
+                        return true;
+                    }
                     if (args[0].equalsIgnoreCase("sethome") && sender instanceof Player) {
                         if (!Objects.requireNonNull(((Player) sender).getWorld()).getName().equals(ConfigManager.getInstants().getWorld().getName()))
                         {

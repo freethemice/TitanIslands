@@ -11,6 +11,8 @@ public class LangManager {
     public LangManager(String lang_file) {
         configFile = new SaveManager(TitanIslands.instance.getName(), "lang" , lang_file);
         instants = this;
+        String version = configFile.getString("version");
+
     }
     public boolean contains(String key)
     {
